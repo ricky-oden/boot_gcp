@@ -32,5 +32,5 @@ test('PENDING申請の承認ボタンを押すと承認APIを呼ぶ', async () =
   await user.click(await screen.findByRole('button', { name: '承認' }))
 
   // Assert: 承認APIのURLが正しいことを確認します。
-  expect(axiosMock.post).toHaveBeenCalledWith('http://localhost:8080/applications/1/approve')
+  expect(axiosMock.post).toHaveBeenCalledWith('TODO: 承認APIのURLを記入')
 })
