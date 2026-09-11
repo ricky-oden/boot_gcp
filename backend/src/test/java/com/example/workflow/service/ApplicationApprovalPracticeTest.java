@@ -41,7 +41,7 @@ class ApplicationApprovalPracticeTest {
         ApplicationResponse response = applicationService.approve(1L);
 
         // Assert
-        assertEquals(null, response.status(), "TODO: 期待するApplicationStatusを記入");
+        assertEquals(ApplicationStatus.APPROVED, response.status(), "承認済みになってない");
         verify(applicationRepository).save(application);
         verify(historyRepository).save(any(ApplicationHistory.class));
     }
