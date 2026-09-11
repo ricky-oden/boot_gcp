@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: task_management
+      POSTGRES_USER: workflow
+      POSTGRES_PASSWORD: workflow
+    ports:
+      - "5433:5432"
+    volumes:
+      - task-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U workflow -d task_management"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg://workflow:workflow@db:5432/task_management
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: http://localhost:8000
+    ports:
+      - "3001:80"
+    depends_on:
+      - backend
+
+volumes:
+  task-db-data:
+

@@ -1,0 +1,32 @@
+.idea/
+.vscode/
+.DS_Store
+backend/target/
+frontend/node_modules/
+frontend/dist/
+*.tsbuildinfo
+frontend/vite.config.js
+frontend/vite.config.d.ts
+task-management-fastapi/backend/__pycache__/
+task-management-fastapi/backend/.pytest_cache/
+task-management-fastapi/frontend/node_modules/
+task-management-fastapi/frontend/dist/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*credentials*.json
+*service-account*.json
+
+# Personal/career source material and generated GCP evidence
+*.docx
+RS提案メール_*.txt
+gcp案件_案件票.md
+シミュ_*.txt
+優先順位_*.md
+GCP_画面操作_面談対策.xlsx*
+output/
+work/

@@ -1,0 +1,767 @@
+このプロジェクトフォルダの説明
+更新日: 2026-09-11
+
+======================================================================
+1. このフォルダは何か
+======================================================================
+
+このフォルダは、Java、React、Python、FastAPI、PostgreSQL、Docker、
+Google Cloudを使う受託開発案件の面談対策・学習用ワークスペースです。
+
+主な目的は次の3つです。
+
+1. スキルシートに記載した2案件の内容を、小さなアプリで理解する。
+2. ReactからBackend APIを呼び、PostgreSQLへ保存する流れをコードで追う。
+3. workflow-apiをGoogle Cloudへ実際にDeployし、Cloud Run、Cloud Logging、
+   Cloud SQL、Artifact Registryの画面と操作を体験する。
+
+商用品質の完成品を作ることが目的ではありません。
+面談で「どの層が何をしているか」「テストで何を確認するか」
+「GCP上でどこを見て調査するか」を説明できることを優先した教材です。
+
+
+======================================================================
+2. 最初に理解しておくべき重要な区別
+======================================================================
+
+このフォルダには、次の3種類の情報があります。
+
+【A. 実際の案件・経歴に関する原情報】
+スキルシート、案件票、提案メールなどに書かれた内容です。
+面談で経歴として説明するときの根拠になります。
+
+【B. 学習用に小さく具体化した実装】
+backend/、frontend/、task-management-fastapi/のコードです。
+実案件の構造をそのまま複製したものではありません。
+例えば、H2、SQLAlchemy、Repository Pattern、
+TODO / IN_PROGRESS / DONEといった具体的な状態名は、
+教材を成立させるための選択です。Spring Data JPAは1件目で使用した固定情報です。
+これらを「実際の現場で使っていた」と断定してはいけません。
+
+【C. 今回の学習で実際に行ったGCP操作】
+2026-09-09から2026-09-10に、学習用Project上でArtifact Registry、
+Cloud Run、Cloud Logging、Cloud SQLを実際に操作した記録です。
+画面と検証結果はExcelとoutput/配下に残っています。
+
+詳細な線引きはPROJECT_CONTEXT.mdを参照してください。
+
+
+======================================================================
+3. ここまでに行ったこと
+======================================================================
+
+【1. 案件資料の整理】
+
+- 顧客受託開発案件の必須スキルを確認した。
+- スキルシートの2案件を、実績と教材上の仮定に分けて整理した。
+- Java / Spring Boot / React / GCPを最優先とし、FastAPIやTestと比較しながら
+  学ぶ順番を作成した。
+
+【2. 1件目の学習用アプリを作成】
+
+「法人向け申請・ワークフロー管理システム」を小さく再現した。
+
+実装した業務は次の3つです。
+
+- 申請を登録する。初期状態はPENDING。
+- 申請一覧を表示する。
+- PENDINGの申請をAPPROVEDへ変更し、承認履歴を1件保存する。
+
+データの流れ:
+
+React + TypeScript
+  -> HTTP / JSON
+Spring Boot Controller
+  -> Application Service
+Spring Data JPA Repository
+  -> PostgreSQL
+
+承認処理では@Transactionalを使い、申請の状態更新と履歴登録を
+同じ1Transactionとして扱う構成にした。
+
+【3. 1件目のTestを作成】
+
+- Backend: JUnit 5 + Mockito
+  ApplicationServiceは本物、RepositoryはMockにし、正常承認、対象なし、
+  承認済みの再承認をTestする。
+- Frontend: Jest + React Testing Library
+  一覧取得、登録API、PENDING時の承認button、APPROVED時の非表示、
+  API Error表示、処理中buttonの無効化をTestする。
+
+【4. 2件目の学習用アプリを作成】
+
+「法人向け業務依頼・進捗管理Webシステム」をtask-management-fastapi/に作成した。
+
+実装した主な機能:
+
+- Taskの一覧、登録、検索。
+- 担当者と期限の更新。
+- TODO -> IN_PROGRESS -> DONEの状態遷移。
+- 対象なし、不正な状態遷移、入力エラーの応答。
+
+構成:
+
+React + TypeScript
+  -> HTTP / JSON
+FastAPI Router
+  -> TaskService
+TaskRepository
+  -> SQLAlchemy
+PostgreSQL
+
+Backendはpytest、FrontendはJestでTest codeを用意した。
+
+【5. 2案件の比較資料を作成】
+
+- Spring BootとFastAPIのレイヤーと記述方法の比較。
+- JUnit / Mockito / Jest / React Testing Library / pytestの役割の比較。
+- 30分、60分、90分で復習する場合の学習順序の作成。
+
+【6. workflow-apiをGoogle Cloudへ実際にDeploy】
+
+ブラウザ操作にはChromeの「CT用」Profileのみを使用した。
+Localにgcloudがなかったため、Google Cloud Consoleとブラウザ内Cloud Shellを使用した。
+
+実施した流れ:
+
+1. 学習専用Google Cloud ProjectとBillingを確認。
+2. Project全体の100円BudgetとCloud Run用Spend Capを設定。
+3. backendをCloud ShellへUpload。
+4. Docker ImageをBuildし、Artifact RegistryへPush。
+5. H2 ProfileでCloud RunへDeploy。
+6. ID Token付きでGET、POST、承認APIを実行。
+7. Cloud LoggingでRequest LogとApplication Logを確認。
+8. Cloud SQL for PostgreSQLを最小・低コスト構成で作成。
+9. Cloud RunからCloud SQLへJava Connectorで接続。
+10. 意図的にDB Passwordを間違えたRevisionを作り、起動失敗を発生。
+11. Logs Explorerでroot causeを特定。
+12. 正しい設定の新RevisionをDeployし、復旧を確認。
+
+【7. GCP操作の画面教材を作成】
+
+- Billing、Budget、Artifact Registry、Cloud Run、Logging、Cloud SQLの画面を撮影。
+- Service URL、IP Address、Account情報などを不透明の黒マスクで隠した。
+- PasswordはExcel、Screenshot、Logに記録していない。
+- マスク前の画像は成果物から削除した。
+- 7Sheet構成のGCP_画面操作_面談対策.xlsxを作成。
+- 画像が小さかったため、操作Sheetの画像、行高、列幅を拡大した。
+- 面談チェックSheetの11問それぞれに、該当画面を追加した。
+- Artifact Toolで作成し、Sheet Render、LibreOffice PDF変換、数式エラー検査を行った。
+
+
+======================================================================
+4. GCPで確認できた結果
+======================================================================
+
+次は2026-09-11にChromeのCT用Profileで再確認した情報です。
+
+【Google Cloud Project】
+
+- Display name: workflow-gcp-learning-20260909
+- Project ID: workflow-gcp-learn-260909-rk82
+- Region: asia-northeast1（Tokyo）
+- 撮影時のBilling確定表示: 0円
+- 2026-09-11のTrial表示: Credit総額47,813円、使用78円
+- 注意: Billing表示には遅延があるため、0円は最終請求額の保証ではない。
+
+【Budget】
+
+- workflow-project-budget-100yen
+  Project全体の100円Budget。Alertは50%、80%、90%、100%。
+- workflow-cloud-run-spend-cap
+  Cloud Run対象の90円Spend Cap。Alertは50%、80%、100%。
+- Spend CapはCloud SQLの課金を停める仕組みではない。
+
+【Artifact Registry】
+
+- Repository: workflow-repo
+- Format: Docker
+- Location: asia-northeast1
+- Image: workflow-api
+- Tag: learning
+- Manifest list digest: sha256:53f1f11a8ad9b1e9a59442428ea0e552a665c6681ed4734d62e909d94ea8dafa
+- Cloud Run側のImage manifest digest:
+  sha256:3c1acb76befffbe0667e99077be5d740d4d4860424a33937d1bf90736827391b
+- 脆弱性Scan: OFF
+- 2026-09-11のRepository size: 128.6MB
+
+【Cloud Run】
+
+- Service: workflow-api
+- 公開アクセス: 無効。認証必須。
+- CPU: 1
+- Memory: 512MiB
+- Minimum instances: 0
+- Maximum instances: 1
+- Concurrency: 20
+- Billing: Request-based。CPU throttling有効。
+- Port: 8080
+- H2版Revision: workflow-api-00001-r7k
+- Cloud SQL正常Revision: workflow-api-sql-ok
+- 意図的な失敗Revision: workflow-api-sql-bad（0% Traffic）
+- 復旧確認Revision: workflow-api-sql-fixed
+- 最終Revision: workflow-api-sql-ready
+- 最終確認時はworkflow-api-sql-readyに100% Traffic。GETは200。
+- 2026-09-11もServiceは正常。Service minimum 0、Revision maximum 1、Concurrency 20、Request-based billingを画面で再確認。
+
+【Cloud SQL】
+
+- Instance: workflow-db
+- Database engine: PostgreSQL 16.15
+- Edition: Enterprise
+- Machine: db-f1-micro（1 vCPU、約629MB）
+- Storage: 10GB SSD
+- Zone: asia-northeast1-a
+- Availability: Single zone
+- Database: workflow
+- User: workflow
+- HA、Replica、PITR、Automatic backup、Storage auto increase、
+  Deletion protection、削除後Backup保持: OFF
+- ApplicationはCloud SQL Java Connectorを使用。
+- Passwordはこのフォルダには保存していない。
+- 2026-09-11もInstanceは利用可能。PostgreSQL 16、Enterprise、10GB、asia-northeast1-aを一覧で再確認。
+
+【Service Account】
+
+- Name: workflow-runner
+- Application用の権限: roles/cloudsql.clientのみ
+
+【実行結果】
+
+H2版:
+- GET /applications -> 200
+- POST /applications -> 201
+- POST /applications/{id}/approve -> 200
+
+Cloud SQL版:
+- GET /applications -> 200
+- POST /applications -> 201
+- 別RequestのGETで登録済み申請を取得 -> 200
+- POST /applications/{id}/approve -> 200
+
+障害復旧練習:
+- 誤ったDB PasswordのRevisionを1度Deployし、起動失敗を発生させた。
+- Cloud Loggingで次の連鎖を確認した。
+  password authentication failed
+  GenericJDBCException
+  BeanCreationException
+  startup TCP probe failed
+  Ready condition = False
+- 旧の正常Revisionは壊さず、正しい設定のRevisionを新規Deployして復旧した。
+
+【費用の考え方】
+
+- Cloud Runはminimum instances 0のため、Requestがない時のCompute課金を抑える構成。
+- Artifact Registryは小さなImage保管が中心。
+- 少量のCloud Loggingは無料枠内に収まる見込み。
+- 継続的な課金の主要因はCloud SQL。
+- 実構成のCloud SQLは約2〜3円/時、約50〜70円/24時間とする概算を
+  Excelに記載している。実際の請求はBillingで確認すること。
+
+【重要: Resourceの削除状態】
+
+学習用Resourceは、面談終了後まで復習に使うという指示により削除していません。
+2026-09-11の再確認時点でCloud Run、Cloud SQL、Artifact Registryが残っています。
+特にCloud SQLは課金が続きます。
+削除する場合は、必ずCloud Consoleで現在状態と対象名を再確認してください。
+
+
+======================================================================
+5. フォルダ構成と各ファイルの役割
+======================================================================
+
+【Root直下の主要ファイル】
+
+README.md
+  1件目のSpring Boot + React教材の中心ドキュメント。
+  起動、API、レイヤー、DI、JPA、Transaction、Test、Docker、
+  Cloud Run、Logging、Cloud SQL、Cleanupをまとめている。
+  初めてコードを動かす人はまずこれを読む。
+
+PROJECT_CONTEXT.md
+  2案件について、スキルシート上の確定情報と、
+  教材上の具体化を分けている。
+  面談で事実と教材を混同しないための重要ファイル。
+
+LEARNING_GUIDE.md
+  面談直前に30分、60分、90分で復習するための順番。
+  時間がない場合のTOP 5も記載。
+
+TECH_COMPARISON.md
+  Java / Spring BootとPython / FastAPIを、Controller / Router、DTO / Pydantic、
+  DI、ORM、Exception Handling、Transactionなどの観点で比較。
+
+TEST_COMPARISON.md
+  JUnit 5、Mockito、pytest、Jest、React Testing Libraryの役割と、
+  Backend / Frontend Testの対応関係を比較。
+
+docker-compose.yml
+  1件目のLocal実行用。db、backend、frontendの3Containerをまとめて起動する。
+  PortはPostgreSQL 5432、Spring Boot 8080、React 3000。
+
+GCP_画面操作_面談対策.xlsx
+  実際に操作したGoogle Cloud Consoleの画面教材。
+  画像の意味、行う操作、今回の確認結果、次の操作、面談での説明例を記載。
+  操作Sheetの画像は大きめに調整済み。
+  面談チェックSheetには11問の30秒回答と該当画面がある。
+
+GCP_画面操作_面談対策.xlsx.inspect.ndjson
+  Excel生成時の内容検査ログ。
+  通常の復習で読む必要はない。
+
+RSスキルシート_顧客受託開発案件.docx
+  案件経歴の原資料。面談説明の根拠。
+  個人情報や経歴情報を含む可能性があるため、外部共有に注意する。
+
+RS提案メール_顧客受開発案件.txt
+  顧客案件への提案文面。経歴と案件要件の対応を確認する資料。
+
+gcp案件_案件票.md
+  対象の受託開発案件の条件、期間、場所、必須スキル、単価などの原情報。
+
+優先順位_09081702.md
+  面談までの学習優先順位。
+  Java / Spring Boot、JUnit / Mockito、FastAPI、GCP、DB / SQLなどを
+  S / A / B等の優先度で整理している。
+
+シミュ_gcp_複合 - 自己紹介練習開始.txt
+  自己紹介やGCPに関する面談練習の記録。
+  文量が大きいため、最初から読むより、必要な質問を検索する用途に向く。
+
+このプロジェクトフォルダの説明.txt
+  現在読んでいるファイル。フォルダ全体の入り口。
+
+
+【backend/】
+
+1件目のSpring Boot Backendです。
+
+backend/pom.xml
+  MavenのProject定義。Java 17、Spring Boot 3.4.5、Web、Data JPA、Validation、
+  PostgreSQL Driver、H2、Cloud SQL Java Connector、Test dependencyを定義。
+
+backend/Dockerfile
+  Mavenでbuildし、Java 17 JREで実行するMulti-stage Dockerfile。
+  ContainerのPortは8080。
+
+backend/src/main/java/com/example/workflow/WorkflowApplication.java
+  Spring Boot Applicationの起動地点。
+
+backend/src/main/java/com/example/workflow/config/WebConfig.java
+  LocalのReactからAPIを呼ぶためのWeb / CORS設定。
+
+backend/src/main/java/com/example/workflow/controller/ApplicationController.java
+  HTTPの入口。GET /applications、POST /applications、
+  POST /applications/{id}/approveをApplicationServiceへ渡す。
+
+backend/src/main/java/com/example/workflow/controller/GlobalExceptionHandler.java
+  Validation Error、対象なし、承認済みの再承認をHTTP Error Responseへ変換。
+
+backend/src/main/java/com/example/workflow/dto/
+  APIのRequest / Response型。
+  CreateApplicationRequest.javaでtitleの必須チェックを行う。
+
+backend/src/main/java/com/example/workflow/entity/
+  PostgreSQLのTableと対応するJPA Entity。
+  Application、ApplicationHistory、ApplicationStatusを含む。
+
+backend/src/main/java/com/example/workflow/exception/
+  申請がない場合と、既に承認済みの場合の業務例外。
+
+backend/src/main/java/com/example/workflow/repository/
+  Spring Data JPAのRepository。Entityの検索と保存を担当。
+
+backend/src/main/java/com/example/workflow/service/ApplicationService.java
+  業務ルールの中心。一覧、登録、承認、Transaction、Application Logを担当。
+
+backend/src/main/resources/application.yml
+  Local PostgreSQL用の基本設定。PORT、DB_URL、DB_USER、DB_PASSWORDを環境変数で上書きできる。
+
+backend/src/main/resources/application-cloud-run-learning.yml
+  Cloud Run単体学習用。In-memory H2とcreate-dropを使う。
+  Instance再起動でデータが消えるため、本番用ではない。
+
+backend/src/main/resources/application-cloud-sql.yml
+  Cloud SQL接続用。DB_NAME、DB_USER、DB_PASSWORD、INSTANCE_CONNECTION_NAMEと
+  Cloud SQL Java Connectorを使う。
+
+backend/src/test/java/com/example/workflow/service/ApplicationServiceTest.java
+  JUnit 5 + MockitoのService Unit Test。3Case。
+
+
+【frontend/】
+
+1件目のReact + TypeScript Frontendです。
+
+frontend/package.json / package-lock.json
+  npm dependencyとbuild / test command。Vite、React、TypeScript、Jest、
+  React Testing Libraryなどを定義。
+
+frontend/src/main.tsx
+  React Applicationの起動地点。
+
+frontend/src/App.tsx
+  申請一覧、title入力、登録、承認、loading、Error表示を実装。
+  AxiosでSpring Boot APIを呼び、React Hook Formで入力を扱う。
+
+frontend/src/App.test.tsx
+  Jest + React Testing LibraryのComponent Test。6Case。AxiosをMockする。
+
+backend/src/test/java/com/example/workflow/service/ApplicationApprovalPracticeTest.java
+  手を動かすJUnit / Mockito練習用Test。test-practice branchでは1箇所だけTODO。
+
+frontend/src/App.practice.test.tsx
+  手を動かすJest / React Testing Library練習用Test。Axios Mockを使う。
+
+TEST_PRACTICE.md
+  Unit Test、local Integration Test、Git / GitHub Actions、既存GCP Resource確認の実習手順。
+
+JPA_LEARNING.md
+  Entity、Repository、Hibernate、PostgreSQL、TransactionとMock Testの関係を整理した資料。
+
+.github/workflows/ci.yml
+  GitHub Actions学習用のBackend Test / packageとFrontend Test / build Workflow。
+
+.devcontainer/devcontainer.json
+  Java 17、Node.js 20、Docker CLIを使うVS Code DevContainer設定。
+
+frontend/src/style.css
+  申請画面の表示Style。
+
+frontend/Dockerfile
+  Node.jsでbuildし、静的FileをWeb Serverで配信するためのDockerfile。
+
+frontend/vite.config.ts / tsconfig*.json / babel.config.cjs / jest.config.cjs
+  Vite、TypeScript、Babel、Jestの設定。
+
+
+【task-management-fastapi/】
+
+2件目のFastAPI + React教材です。
+
+task-management-fastapi/README.md
+  実績と教材の区別、起動方法、API、Test、Python基本構文、
+  GCPはこの2件目には組み込んでいないことを説明。
+
+task-management-fastapi/docker-compose.yml
+  PostgreSQL、FastAPI、Reactを起動。
+  PortはPostgreSQL 5433、FastAPI 8000、React 3001。
+
+task-management-fastapi/backend/requirements.txt
+  FastAPI 0.115.12、Uvicorn 0.34.2、SQLAlchemy 2.0.40、psycopg 3.2.6、
+  Pydantic 2.11.3、pytest 8.3.5を定義。
+
+task-management-fastapi/backend/app/main.py
+  FastAPI Applicationの起動、CORS、Router、Exception Handlerの登録。
+
+task-management-fastapi/backend/app/database.py
+  SQLAlchemy Engine、Session、DB接続の設定。
+
+task-management-fastapi/backend/app/routers/tasks.py
+  Task APIの入口。一覧、検索、登録、更新、状態更新。
+
+task-management-fastapi/backend/app/services/task_service.py
+  Taskの業務ルール。不正状態遷移の拒否を担当。
+
+task-management-fastapi/backend/app/repositories/task_repository.py
+  SQLAlchemyを使ったTaskの検索と保存。
+
+task-management-fastapi/backend/app/schemas/task.py
+  Pydantic Request / Response Model。型、必須値、文字数、日付、EnumのValidation。
+
+task-management-fastapi/backend/app/models/task.py
+  SQLAlchemy ModelとTaskStatus。PostgreSQL Tableと対応。
+
+task-management-fastapi/backend/tests/test_task_service.py
+  pytest + unittest.mockのService Test。正常更新、対象なし、不正遷移の3Case。
+
+task-management-fastapi/frontend/
+  2件目のReact Frontend。Taskの一覧、検索、更新、状態操作を行う。
+  api.tsがHTTP通信、api.test.tsがJest Testを担当。
+
+
+【output/】
+
+GCP教材のScreenshotとExcel検証用生成物です。
+
+output/gcp_screenshots/
+  Excelに貼るGoogle Cloud ConsoleのScreenshot。
+  *_masked.pngはService URL、IP、Account情報などを黒く隠した版。
+  raw版は削除済み。
+
+  主な番号の意味:
+  05-06: Billing、Budget
+  07-09: Artifact Registry
+  10-12: Cloud Run概要、Container、Log
+  13-18: Cloud SQL一覧、見積り、詳細、Connections、Databases、Users
+  19: Cloud Run Revisions
+  20-21: Logs ExplorerのErrorと詳細
+  22: Cloud RunからCloud SQLへの接続設定
+
+output/gcp_excel_renders/
+  Excelの7SheetをArtifact ToolでPNG Renderした検証用画像。
+  formula_error_check.txtは数式Errorが0件であることの検査結果。
+
+output/libreoffice_pdf/
+  最初のExcel版をLibreOfficeでPDF変換し、画像が実際に埋め込まれるか
+  確認した一時的なQA生成物。
+
+output/libreoffice_pdf_v2/
+  画像を拡大し、面談チェックに画像を追加した最終Excel版の
+  LibreOffice PDF / PNG検証物。
+  最終成果物はRootの.xlsxであり、こちらは検査用。
+
+
+【work/】
+
+Excel生成とScreenshot加工の作業用Script置き場です。
+
+work/build_gcp_learning_workbook.mjs
+  @oai/artifact-toolを使い、GCP_画面操作_面談対策.xlsxを生成するScript。
+  7Sheet、文章、画像、行高、列幅、マスク済みScreenshotの参照を定義。
+
+work/mask_gcp_screenshots.cjs
+  Screenshotの機密表示領域に、不透明の黒マスクを付けるScript。
+
+work/node_modules/
+  Excel生成用のBundled dependencyへの参照。
+  Applicationの実装コードではない。
+
+
+======================================================================
+6. どの順番で読むと分かりやすいか
+======================================================================
+
+【フォルダ全体を理解したい】
+
+1. このプロジェクトフォルダの説明.txt
+2. PROJECT_CONTEXT.md
+3. README.md
+4. GCP_画面操作_面談対策.xlsx
+5. TECH_COMPARISON.md
+6. TEST_COMPARISON.md
+
+【1件目のSpring Boot案件を復習したい】
+
+1. README.md
+2. ApplicationController.java
+3. ApplicationService.java
+4. ApplicationRepository.java
+5. Application.java / ApplicationHistory.java
+6. ApplicationServiceTest.java
+7. frontend/src/App.tsx
+8. frontend/src/App.test.tsx
+
+【2件目のFastAPI案件を復習したい】
+
+1. task-management-fastapi/README.md
+2. routers/tasks.py
+3. services/task_service.py
+4. schemas/task.py
+5. repositories/task_repository.py
+6. models/task.py
+7. tests/test_task_service.py
+8. frontend/src/App.tsx / api.ts / api.test.ts
+
+【GCP操作と面談回答を復習したい】
+
+1. GCP_画面操作_面談対策.xlsxの00_全体フロー
+2. 01_CloudRun
+3. 02_Logging
+4. 03_CloudSQL
+5. 04_ArtifactRegistry
+6. 05_Billing
+7. 06_面談チェック
+
+【面談直前で時間がない】
+
+1. PROJECT_CONTEXT.md
+2. LEARNING_GUIDE.mdの30分版
+3. ApplicationService.java
+4. task_service.py
+5. 両Backend Test
+6. Excelの06_面談チェック
+
+
+======================================================================
+7. Localで動かす方法
+======================================================================
+
+【1件目: Spring Boot + React + PostgreSQL】
+
+このフォルダのRootで実行:
+
+  docker compose up --build
+
+起動後:
+
+- React: http://localhost:3000
+- Spring Boot API: http://localhost:8080
+- PostgreSQL: localhost:5432
+
+停止するだけ:
+
+  docker compose down
+
+DBの学習データも削除:
+
+  docker compose down -v
+
+注意: -vはPostgreSQL volumeを削除します。
+
+【2件目: FastAPI + React + PostgreSQL】
+
+  cd task-management-fastapi
+  docker compose up --build
+
+起動後:
+
+- React: http://localhost:3001
+- FastAPI Swagger UI: http://localhost:8000/docs
+- PostgreSQL: localhost:5433
+
+停止:
+
+  docker compose down
+
+DBデータも削除:
+
+  docker compose down -v
+
+
+======================================================================
+8. Testの実行方法
+======================================================================
+
+【Spring Boot Backend】
+
+  docker build --target build -t workflow-backend-test ./backend
+
+Dockerfileのbuild stage内でmvn packageが実行され、JUnit Testも実行されます。
+
+【Spring Boot側React Frontend】
+
+  docker build --target build -t workflow-frontend-test ./frontend
+  docker run --rm workflow-frontend-test npm test
+
+【FastAPI Backend】
+
+  cd task-management-fastapi
+  docker compose run --rm backend pytest -q
+
+【FastAPI側React Frontend】
+
+  cd task-management-fastapi
+  docker build --target build -t task-frontend-test ./frontend
+  docker run --rm task-frontend-test npm test
+
+テストコードは存在しますが、この説明ファイル作成時に再実行したわけではありません。
+最新の成否が必要な場合は上記commandで実行してください。
+
+
+======================================================================
+9. GCP Resourceを面談後に削除する手順
+======================================================================
+
+この操作はCloud上のデータとResourceを削除します。
+現在状態を確認し、対象Project IDがworkflow-gcp-learn-260909-rk82であることを
+確認してから実行してください。
+
+推奨順序:
+
+1. Cloud SQL Instance workflow-dbを最優先で削除。
+2. Cloud Run Service workflow-apiを削除。
+3. Artifact Registry Repository workflow-repoを削除。
+4. Service Account workflow-runnerを削除。
+5. Cloud ShellにUploadしたZIPと展開済みbackendを削除。
+6. Cloud SQL、Cloud Run、Artifact Registryの一覧で残存Resourceを再確認。
+7. Billing Reportを確認。表示遅延を考慮する。
+8. 最後に学習専用Projectを削除。
+
+CLI例:
+
+  gcloud config set project workflow-gcp-learn-260909-rk82
+  gcloud sql instances delete workflow-db
+  gcloud run services delete workflow-api --region=asia-northeast1
+  gcloud artifacts repositories delete workflow-repo --location=asia-northeast1
+  gcloud iam service-accounts delete workflow-runner@workflow-gcp-learn-260909-rk82.iam.gserviceaccount.com
+
+最後のProject削除は不可逆な操作です。
+他のProjectを選んでいないことを必ず再確認してください。
+
+
+======================================================================
+10. 機密情報と共有時の注意
+======================================================================
+
+- Cloud SQL PasswordやID Tokenはフォルダに保存していない。
+- Screenshotの公開時は、*_masked.pngを使用する。
+- スキルシート、提案メール、面談練習Logには個人情報や経歴情報が
+  含まれる可能性がある。フォルダ全体をそのまま公開Repositoryへ上げない。
+- 機密情報が表示される画面はマスク済み版をExcelに埋め込んでいる。
+  機密情報が表示されていない画面は、撮影画像をそのまま使用している。
+- GCP Project IDやResource名は教材に記載されている。
+  外部公開時はそれらも再マスクすること。
+
+
+======================================================================
+11. 生成物と一時ファイルの扱い
+======================================================================
+
+残すべき主な成果物:
+
+- README.md
+- PROJECT_CONTEXT.md
+- LEARNING_GUIDE.md
+- TECH_COMPARISON.md
+- TEST_COMPARISON.md
+- backend/ / frontend/
+- task-management-fastapi/
+- GCP_画面操作_面談対策.xlsx
+- output/gcp_screenshots/
+- 案件・面談関連の原資料
+
+検証後に必要なければ整理候補にできるもの:
+
+- output/libreoffice_pdf/
+- output/libreoffice_pdf_v2/
+- output/gcp_excel_renders/
+- GCP_画面操作_面談対策.xlsx.inspect.ndjson
+
+ただし、この説明ファイル作成時には、これらを削除していません。
+最終Excelの再生成や、QA履歴の確認に使えるためです。
+
+
+======================================================================
+12. ソースコード管理の現状
+======================================================================
+
+このRootフォルダは学習用のlocal Git Repositoryとして初期化します。
+`main`と`completed`は完成版、`test-practice`は2つの練習Testに各1箇所のTODOを置くbranchです。
+
+.gitignoreで除外する主な対象:
+
+- IDE設: .idea/ / .vscode/
+- macOS生成物: .DS_Store
+- Java build生成物: backend/target/
+- Frontend dependency / build生成物: frontend/node_modules/ / frontend/dist/
+- GCP Screenshot、Excel、案件資料、提案文、認証情報に該当し得るFile
+
+今後Gitで管理する場合は、個人情報、Screenshot、Excel、案件資料を
+どこまで含めるかを決め、公開範囲に合わせて.gitignoreを見直してください。
+
+
+======================================================================
+13. このフォルダを1分で説明すると
+======================================================================
+
+「受託開発案件の面談対策として、2つの既存Webシステムの業務フローを
+小さな教材で再現したフォルダです。1件目はReact、Spring Boot、
+PostgreSQLの申請・承認システムで、JUnit、Mockito、Jest、
+React Testing LibraryのTestがあります。2件目はReact、FastAPI、PostgreSQLの
+業務依頼・進捗管理システムで、pytestとJestのTestがあります。
+さらに1件目のworkflow-apiをGoogle Cloudへ実際にDeployし、Artifact Registry、
+Cloud Run、Cloud Logging、Cloud SQLの操作、認証付きAPI確認、
+意図的なDB接続失敗からの復旧まで体験しています。
+そのコード、比較資料、GCP Screenshot、面談復習用Excelを1か所にまとめた
+学習用Workspaceです」

@@ -1,0 +1,13 @@
+:root { font-family: system-ui, sans-serif; color: #222; background: #f4f6f8; }
+body { margin: 0; }
+main { max-width: 900px; margin: 32px auto; padding: 24px; }
+section, form, li { background: white; padding: 16px; margin-bottom: 16px; border-radius: 6px; }
+section, form { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+h2 { width: 100%; margin: 0 0 8px; }
+input, select, button { padding: 8px; }
+ul { list-style: none; padding: 0; }
+li { display: grid; grid-template-columns: 1.3fr auto 1fr auto auto auto; gap: 8px; align-items: center; }
+.status { font-size: 12px; background: #e8eef8; border-radius: 12px; padding: 4px 8px; }
+.error { color: #b42318; }
+button:disabled { opacity: .6; }
+
