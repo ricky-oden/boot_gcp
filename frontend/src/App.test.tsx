@@ -3,6 +3,8 @@ import userEvent from '@testing-library/user-event'
 import axios from 'axios'
 import { MemoryRouter } from 'react-router-dom'
 import App from './App'
+import { Provider } from 'react-redux'
+import { createAppStore } from './store/store'
 
 jest.mock('axios')
 const axiosMock = axios as jest.Mocked<typeof axios>
@@ -23,7 +25,9 @@ beforeEach(() => {
 function renderApp() {
   return render(
     <MemoryRouter>
-      <App />
+      <Provider store={createAppStore()}>
+        <App />
+      </Provider>
     </MemoryRouter>,
   )
 }
@@ -91,4 +95,20 @@ test('API処理中は登録ボタンを無効にする', async () => {
 
   completeRequest?.({ data: pendingApplication })
   await waitFor(() => expect(screen.getByRole('button', { name: '登録' })).not.toBeDisabled())
+})
+
+test('Reduxの状態フィルターでAPPROVEDだけを表示する', async () => {
+  axiosMock.get.mockResolvedValueOnce({
+    data: [pendingApplication, { ...approvedApplication, id: 2, title: '承認済み申請' }],
+  })
+  const user = userEvent.setup()
+  renderApp()
+  await screen.findByText('PC購入申請')
+
+  await user.click(screen.getByLabelText('APPROVED'))
+
+  expect(screen.queryByText('PC購入申請')).not.toBeInTheDocument()
+  expect(screen.getByText('承認済み申請')).toBeInTheDocument()
+  expect(screen.getByText('APPROVED', { selector: 'span' })).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: '承認' })).not.toBeInTheDocument()
 })

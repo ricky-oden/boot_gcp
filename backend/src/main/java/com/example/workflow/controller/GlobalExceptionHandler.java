@@ -41,8 +41,14 @@ public class GlobalExceptionHandler {
         return error(HttpStatus.BAD_REQUEST, message);
     }
 
+    @ExceptionHandler(Exception.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse handleUnexpected(Exception exception) {
+        log.error("Unexpected server error", exception);
+        return error(HttpStatus.INTERNAL_SERVER_ERROR, "サーバー内部でエラーが発生しました");
+    }
+
     private ErrorResponse error(HttpStatus status, String message) {
         return new ErrorResponse(Instant.now(), status.value(), message);
     }
 }
-
