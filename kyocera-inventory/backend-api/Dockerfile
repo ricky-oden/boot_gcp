@@ -3,6 +3,7 @@ WORKDIR /workspace
 COPY gradle gradle
 COPY gradlew settings.gradle build.gradle ./
 COPY backend-api/build.gradle backend-api/build.gradle
+COPY openapi openapi
 RUN ./gradlew :backend-api:dependencies --no-daemon
 COPY backend-api/src backend-api/src
 RUN ./gradlew :backend-api:bootJar --no-daemon

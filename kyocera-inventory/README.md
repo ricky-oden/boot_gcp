@@ -8,7 +8,7 @@
 - 1/2案件情報: ReduxやSpring Batch等を利用する可能性がある。Day1では実装しない。
 - 学習用仮定: Directory名、Port、Database名、`GET /api/health`は学習を成立させるための仮設定であり、実案件仕様ではない。
 
-## Day1の構成
+## 構成
 
 ```text
 kyocera-inventory/
@@ -16,7 +16,7 @@ kyocera-inventory/
 ├── batch/             Day5用placeholder
 ├── frontend-pc/       Day3用placeholder
 ├── frontend-mobile/   Day4用placeholder
-├── openapi/           Day2用placeholder
+├── openapi/           OpenAPI 3.0.3 YAML（API仕様の正）
 ├── docs/              学習記録
 └── docker-compose.yml 京セラ専用Backend/PostgreSQL
 ```
@@ -29,6 +29,9 @@ kyocera-inventory/
 | Spring Boot | 2.7.18 | 実案件資料の2.7.4ではなく、2.7系最終保守版を採用 |
 | Gradle | 7.6.4 | Wrapperで固定 |
 | PostgreSQL | 16-alpine | 既存環境と同系列だがDatabase/Volume/Portは分離 |
+| OpenAPI Generator | 6.6.0 | Gradle Plugin、Spring 2系の`javax` Codeを生成 |
+| MyBatis Starter | 2.3.2 | Spring Boot 2.7対応系列 |
+| springdoc-openapi | 1.8.0 | Spring Boot 2向けv1系列の最終安定版 |
 
 Spring Boot 2.7.18はJava 17およびGradle 7.xをサポートします。Spring Boot 2.7.4との差分はpatch-levelの学習環境上の差として扱い、実案件Versionを2.7.18と断定しません。
 
@@ -42,7 +45,20 @@ Spring Boot 2.7.18はJava 17およびGradle 7.xをサポートします。Spring
 | Compose Project | root既存構成 | kyocera-inventory |
 | Docker Volume | postgres-data | kyocera-postgres-data |
 
-京セラBackendはJPAを含みません。Day1はSpring JDBCの`SELECT 1`だけでPostgreSQL接続を確認し、Day2でMyBatis XMLを追加できる土台にしています。
+京セラBackendはJPAを含みません。Day1はSpring JDBCの`SELECT 1`でPostgreSQL接続を確認し、Day2ではMyBatis XMLをDBアクセスの主経路として追加しています。
+
+## Day2: 在庫検索
+
+Day2ではOpenAPI Schema FirstとMyBatis XMLで、`itemCode`による最小在庫検索を追加しました。商品・倉庫・在庫のSchemaとAPIは学習用仮定であり、実案件仕様ではありません。
+
+```text
+OpenAPI YAML → generated Interface/Model → Controller → Service
+→ Mapper Interface → Mapper XML → PostgreSQL → Response
+```
+
+生成Codeは`backend-api/build/generated/openapi/`へ出力されます。`build/`配下を直接編集せず、必ず`openapi/inventory-api.yaml`を変更して再生成します。
+
+`warehouseId`条件は自習用に未実装です。ヒントは`docs/DAY2_EXERCISE.md`を参照してください。
 
 ## 最短の起動方法（Docker Compose）
 
@@ -52,6 +68,7 @@ Repository rootから実行します。
 docker compose -f kyocera-inventory/docker-compose.yml up -d --build
 docker compose -f kyocera-inventory/docker-compose.yml ps
 curl http://localhost:8081/api/health
+curl "http://localhost:8081/api/inventories?itemCode=ITEM001"
 docker compose -f kyocera-inventory/docker-compose.yml exec kyocera-db \
   psql -U kyocera -d kyocera_inventory -c "SELECT current_database(), current_user;"
 ```
@@ -80,6 +97,8 @@ docker compose -f kyocera-inventory/docker-compose.yml down
 java -version
 cd kyocera-inventory
 ./gradlew --version
+./gradlew :backend-api:openApiValidate
+./gradlew :backend-api:openApiGenerate
 ./gradlew :backend-api:test
 docker compose -f docker-compose.yml up -d kyocera-db
 DB_URL=jdbc:postgresql://host.docker.internal:5433/kyocera_inventory \
@@ -92,6 +111,7 @@ DB_URL=jdbc:postgresql://host.docker.internal:5433/kyocera_inventory \
 
 ```bash
 curl http://localhost:8081/api/health
+curl "http://localhost:8081/api/inventories?itemCode=ITEM001"
 docker compose -f kyocera-inventory/docker-compose.yml exec kyocera-db \
   psql -U kyocera -d kyocera_inventory -c "SELECT 1;"
 ```
@@ -104,6 +124,13 @@ DevContainer内の`localhost`はDevContainer自身です。Docker Desktop側で�
 - `HealthControllerTest`: PostgreSQL応答をMockし、HTTP 200とJSONを確認。
 - Docker Compose smoke test: 本物のPostgreSQLへ`SELECT 1`を実行し、Health APIで`database=UP`を確認。
 
-## Day1では未実装
+## 学習Guide
 
-MyBatis、OpenAPI Schema First、在庫Table、Redux、React、Smartphone、Spring Batch、Checkstyle、GCS、GKE、Jira/結合Test Scenarioは後続Dayで扱います。
+- `docs/DAY1_FOUNDATION.md`: Day1の土台
+- `docs/DAY2_OPENAPI_MYBATIS.md`: 処理Flowと説明Question
+- `docs/DAY2_SQL_CHECK.md`: psql／DBeaver確認SQL
+- `docs/DAY2_EXERCISE.md`: `warehouseId`検索の自習ヒント
+
+## Day2終了時点で未実装
+
+`warehouseId`検索（Exercise）、Redux、React、Smartphone、Spring Batch、Checkstyle、GCS、GKE、Jira／本格的な結合Test Scenarioは後続Dayで扱います。

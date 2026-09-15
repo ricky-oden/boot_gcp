@@ -1,0 +1,66 @@
+openapi: 3.0.3
+info:
+  title: Kyocera Inventory Learning API
+  version: 0.1.0
+  description: >-
+    京セラ案件キャッチアップ用の学習APIです。実案件のAPI仕様ではありません。
+servers:
+  - url: /
+tags:
+  - name: inventories
+    description: 在庫検索
+paths:
+  /api/inventories:
+    get:
+      tags:
+        - inventories
+      operationId: searchInventories
+      summary: 在庫を検索する
+      description: itemCode未指定時は全在庫を返します。
+      parameters:
+        - name: itemCode
+          in: query
+          required: false
+          description: 商品コード
+          schema:
+            type: string
+      # TODO(Day2 Exercise): warehouseId Query Parameterは学習者が追加する。
+      responses:
+        '200':
+          description: 在庫検索結果
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InventoryResponse'
+components:
+  schemas:
+    InventoryResponse:
+      type: object
+      required:
+        - inventoryId
+        - itemCode
+        - itemName
+        - warehouseId
+        - warehouseName
+        - quantity
+        - status
+      properties:
+        inventoryId:
+          type: integer
+          format: int64
+        itemCode:
+          type: string
+        itemName:
+          type: string
+        warehouseId:
+          type: integer
+          format: int64
+        warehouseName:
+          type: string
+        quantity:
+          type: integer
+          format: int32
+        status:
+          type: string

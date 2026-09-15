@@ -12,3 +12,18 @@ spring:
     hikari:
       connection-timeout: 5000
       initialization-fail-timeout: 30000
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/schema.sql
+      data-locations: classpath:db/data.sql
+
+mybatis:
+  mapper-locations: classpath:mapper/**/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+
+springdoc:
+  swagger-ui:
+    url: /openapi/inventory-api.yaml
+    disable-swagger-default-url: true
