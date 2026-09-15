@@ -10,11 +10,12 @@
     },
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
   },
-  "forwardPorts": [3000, 8080, 5432],
+  "forwardPorts": [3000, 8080, 8081, 5432, 5433],
   "customizations": {
     "vscode": {
       "extensions": [
         "vscjava.vscode-java-pack",
+        "vscjava.vscode-gradle",
         "vmware.vscode-spring-boot",
         "dbaeumer.vscode-eslint",
         "ms-azuretools.vscode-docker"

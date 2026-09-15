@@ -1,0 +1,3 @@
+rootProject.name = 'kyocera-inventory'
+
+include 'backend-api'

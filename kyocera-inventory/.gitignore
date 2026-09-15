@@ -1,0 +1,7 @@
+.gradle/
+**/build/
+
+# Local-only configuration
+.env
+.env.*
+!.env.example

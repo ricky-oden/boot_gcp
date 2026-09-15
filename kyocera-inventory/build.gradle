@@ -1,0 +1,12 @@
+plugins {
+    id 'base'
+}
+
+allprojects {
+    group = 'com.example.kyocera'
+    version = '0.0.1-SNAPSHOT'
+
+    repositories {
+        mavenCentral()
+    }
+}
