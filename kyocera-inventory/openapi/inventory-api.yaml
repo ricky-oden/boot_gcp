@@ -24,7 +24,13 @@ paths:
           description: 商品コード
           schema:
             type: string
-      # TODO(Day2 Exercise): warehouseId Query Parameterは学習者が追加する。
+        - name: warehouseId
+          in: query
+          required: false
+          description: 倉庫ID
+          schema:
+            type: integer
+            format: int64
       responses:
         '200':
           description: 在庫検索結果

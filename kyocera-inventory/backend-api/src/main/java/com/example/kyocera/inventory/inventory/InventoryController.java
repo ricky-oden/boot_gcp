@@ -17,7 +17,7 @@ public class InventoryController implements InventoriesApi {
     }
 
     @Override
-    public ResponseEntity<List<InventoryResponse>> searchInventories(String itemCode) {
-        return ResponseEntity.ok(inventoryService.search(itemCode));
+    public ResponseEntity<List<InventoryResponse>> searchInventories(String itemCode, Long warehouseId) {
+        return ResponseEntity.ok(inventoryService.search(itemCode, warehouseId));
     }
 }

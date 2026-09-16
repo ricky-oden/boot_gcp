@@ -21,7 +21,7 @@ class InventoryMapperTest {
 
     @Test
     void returnsOnlyRowsForSpecifiedItemCode() {
-        List<InventorySearchRow> results = inventoryMapper.search("ITEM001");
+        List<InventorySearchRow> results = inventoryMapper.search("ITEM001", null);
 
         assertThat(results).hasSize(2);
         assertThat(results).extracting(InventorySearchRow::getItemCode)
@@ -31,8 +31,19 @@ class InventoryMapperTest {
     }
 
     @Test
+    void returnsOnlyRowsForSpecifiedWarehouseId() {
+        List<InventorySearchRow> results = inventoryMapper.search(null, 1L);
+
+        assertThat(results).hasSize(2);
+        assertThat(results).extracting(InventorySearchRow::getWarehouseId)
+                .containsOnly(1L);
+        assertThat(results).extracting(InventorySearchRow::getWarehouseName)
+                .containsExactly("東京倉庫", "東京倉庫");
+    }
+
+    @Test
     void returnsAllRowsWhenItemCodeIsNotSpecified() {
-        List<InventorySearchRow> results = inventoryMapper.search(null);
+        List<InventorySearchRow> results = inventoryMapper.search(null, null);
 
         assertThat(results).hasSize(3);
         assertThat(results).extracting(InventorySearchRow::getInventoryId)

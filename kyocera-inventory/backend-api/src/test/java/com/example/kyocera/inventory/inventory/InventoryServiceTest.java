@@ -23,16 +23,32 @@ class InventoryServiceTest {
     @Test
     void mapsSearchRowsToOpenApiGeneratedModels() {
         InventorySearchRow row = row(1001L, "ITEM001", "六角ボルト", 1L, "東京倉庫", 120, "AVAILABLE");
-        when(inventoryMapper.search("ITEM001")).thenReturn(List.of(row));
+        when(inventoryMapper.search("ITEM001", null)).thenReturn(List.of(row));
 
         InventoryService service = new InventoryService(inventoryMapper);
-        List<InventoryResponse> results = service.search(" ITEM001 ");
+        List<InventoryResponse> results = service.search(" ITEM001 ", null);
 
         assertThat(results).hasSize(1);
         assertThat(results.get(0).getInventoryId()).isEqualTo(1001L);
         assertThat(results.get(0).getItemCode()).isEqualTo("ITEM001");
         assertThat(results.get(0).getWarehouseName()).isEqualTo("東京倉庫");
-        verify(inventoryMapper).search("ITEM001");
+        verify(inventoryMapper).search("ITEM001", null);
+    }
+
+    @Test
+    void mapsSearchRowsToOpenApiGeneratedModels2() {
+        InventorySearchRow row = row(1001L, "ITEM001", "六角ボルト", 1L, "東京倉庫", 120, "AVAILABLE");
+        when(inventoryMapper.search(null, 1L)).thenReturn(List.of(row));
+
+        InventoryService service = new InventoryService(inventoryMapper);
+        List<InventoryResponse> results = service.search(null, 1L);
+
+        assertThat(results).hasSize(1);
+        assertThat(results.get(0).getInventoryId()).isEqualTo(1001L);
+        assertThat(results.get(0).getItemCode()).isEqualTo("ITEM001");
+        assertThat(results.get(0).getWarehouseId()).isEqualTo(1L);
+        assertThat(results.get(0).getWarehouseName()).isEqualTo("東京倉庫");
+        verify(inventoryMapper).search(null, 1L);
     }
 
     private InventorySearchRow row(Long inventoryId, String itemCode, String itemName,

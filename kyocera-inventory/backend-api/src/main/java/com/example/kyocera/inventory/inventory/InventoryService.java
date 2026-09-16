@@ -17,9 +17,9 @@ public class InventoryService {
         this.inventoryMapper = inventoryMapper;
     }
 
-    public List<InventoryResponse> search(String itemCode) {
+    public List<InventoryResponse> search(String itemCode, Long warehouseId) {
         String normalizedItemCode = normalize(itemCode);
-        return inventoryMapper.search(normalizedItemCode).stream()
+        return inventoryMapper.search(normalizedItemCode, warehouseId).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }

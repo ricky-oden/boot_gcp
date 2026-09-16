@@ -31,7 +31,9 @@
             <if test="itemCode != null and itemCode != ''">
                 AND i.item_code = #{itemCode}
             </if>
-            <!-- TODO(Day2 Exercise): warehouseId条件を学習者が追加する。 -->
+            <if test="warehouseId != null">
+                AND i.warehouse_id = #{warehouseId}
+            </if>
         </where>
         ORDER BY i.inventory_id
     </select>

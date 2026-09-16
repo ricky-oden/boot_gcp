@@ -28,7 +28,7 @@ class InventoryControllerTest {
     void returnsInventoriesFilteredByItemCode() throws Exception {
         InventoryResponse response = new InventoryResponse(
                 1001L, "ITEM001", "六角ボルト", 1L, "東京倉庫", 120, "AVAILABLE");
-        when(inventoryService.search("ITEM001")).thenReturn(List.of(response));
+        when(inventoryService.search("ITEM001", null)).thenReturn(List.of(response));
 
         mockMvc.perform(get("/api/inventories").param("itemCode", "ITEM001"))
                 .andExpect(status().isOk())
@@ -37,6 +37,23 @@ class InventoryControllerTest {
                 .andExpect(jsonPath("$[0].itemName").value("六角ボルト"))
                 .andExpect(jsonPath("$[0].warehouseName").value("東京倉庫"));
 
-        verify(inventoryService).search("ITEM001");
+        verify(inventoryService).search("ITEM001", null);
+    }
+
+    @Test
+    void returnsInventoriesFilteredByWarehouseId() throws Exception {
+        InventoryResponse response = new InventoryResponse(
+                1001L, "ITEM001", "六角ボルト", 1L, "東京倉庫", 120, "AVAILABLE");
+        when(inventoryService.search(null, 1L)).thenReturn(List.of(response));
+
+        mockMvc.perform(get("/api/inventories").param("warehouseId", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].inventoryId").value(1001))
+                .andExpect(jsonPath("$[0].itemCode").value("ITEM001"))
+                .andExpect(jsonPath("$[0].itemName").value("六角ボルト"))
+                .andExpect(jsonPath("$[0].warehouseId").value(1L))
+                .andExpect(jsonPath("$[0].warehouseName").value("東京倉庫"));
+
+        verify(inventoryService).search(null, 1L);
     }
 }
