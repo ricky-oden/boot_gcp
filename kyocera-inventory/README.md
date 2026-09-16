@@ -14,7 +14,7 @@
 kyocera-inventory/
 ├── backend-api/       Java 17 + Spring Boot + Gradle
 ├── batch/             Day5用placeholder
-├── frontend-pc/       Day3用placeholder
+├── frontend-pc/       React + Redux Toolkit PC在庫検索
 ├── frontend-mobile/   Day4用placeholder
 ├── openapi/           OpenAPI 3.0.3 YAML（API仕様の正）
 ├── docs/              学習記録
@@ -58,7 +58,13 @@ OpenAPI YAML → generated Interface/Model → Controller → Service
 
 生成Codeは`backend-api/build/generated/openapi/`へ出力されます。`build/`配下を直接編集せず、必ず`openapi/inventory-api.yaml`を変更して再生成します。
 
-`warehouseId`条件は自習用に未実装です。ヒントは`docs/DAY2_EXERCISE.md`を参照してください。
+Day2の`warehouseId` Backend Exerciseは学習者実装済みです。PC画面への条件追加はDay3 Exerciseとして残しています。
+
+## Day3: PC向け在庫検索画面
+
+`http://localhost:5174/inventory`で、Item Code入力からRedux Toolkitの`createAsyncThunk`、Axios、Backend API、selector、Table再描画までを追えます。
+
+Form入力はReact Hook Form、検索結果／Loading／ErrorはReduxへ分けています。Local接続はVite Proxyを使い、京セラBackendへCORS変更を加えていません。
 
 ## 最短の起動方法（Docker Compose）
 
@@ -130,7 +136,8 @@ DevContainer内の`localhost`はDevContainer自身です。Docker Desktop側で�
 - `docs/DAY2_OPENAPI_MYBATIS.md`: 処理Flowと説明Question
 - `docs/DAY2_SQL_CHECK.md`: psql／DBeaver確認SQL
 - `docs/DAY2_EXERCISE.md`: `warehouseId`検索の自習ヒント
+- `docs/DAY3_REACT_REDUX.md`: Redux処理Flow、Browser練習、Exercise、Daily報告
 
 ## Day2終了時点で未実装
 
-`warehouseId`検索（Exercise）、Redux、React、Smartphone、Spring Batch、Checkstyle、GCS、GKE、Jira／本格的な結合Test Scenarioは後続Dayで扱います。
+PC画面の`warehouseId`検索とReset（Exercise）、Smartphone、Spring Batch、Checkstyle、GCS、GKE、Jira／本格的な結合Test Scenarioは後続Dayで扱います。

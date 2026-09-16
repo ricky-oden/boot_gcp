@@ -32,5 +32,15 @@ services:
       kyocera-db:
         condition: service_healthy
 
+  frontend-pc:
+    build:
+      context: frontend-pc
+    environment:
+      VITE_API_PROXY_TARGET: http://backend-api:8081
+    ports:
+      - "5174:5174"
+    depends_on:
+      - backend-api
+
 volumes:
   kyocera-postgres-data:
