@@ -37,26 +37,28 @@ public class StockMovementService {
                 .selectForUpdate(request.getItemCode(), request.getWarehouseId())
                 .orElseThrow(() -> new BusinessRuleException(
                         "INVENTORY_NOT_FOUND",
-                        "指定した商品と倉庫の在庫が見つかりません。"
-                ));
-
-        if (request.getMovementType() == MovementType.OUT) {
-            // DAY4 EXERCISE: 入庫を手本に、在庫不足判定と在庫減算を実装する。
-            throw new BusinessRuleException(
-                    "OUT_MOVEMENT_NOT_IMPLEMENTED",
-                    "出庫処理はDay4 Exerciseです。Practice Guideを参照してください。"
-            );
-        }
+                        "指定した商品と倉庫の在庫が見つかりません。"));
 
         int previousQuantity = inventory.getQuantity();
-        int currentQuantity = previousQuantity + request.getQuantity();
+        int currentQuantity;
+
+        if (request.getMovementType() == MovementType.OUT) {
+            if (previousQuantity < request.getQuantity()) {
+                throw new BusinessRuleException(
+                        "INSUFFICIENT_STOCK",
+                        "在庫が不足しています。");
+            }
+            currentQuantity = previousQuantity - request.getQuantity();
+        } else {
+            currentQuantity = previousQuantity + request.getQuantity();
+        }
+
         OffsetDateTime processedAt = OffsetDateTime.now(clock).withOffsetSameInstant(ZoneOffset.UTC);
 
         int updated = stockMovementMapper.updateQuantity(
                 inventory.getInventoryId(),
                 currentQuantity,
-                processedAt
-        );
+                processedAt);
         if (updated != 1) {
             throw new IllegalStateException("在庫更新件数が1件ではありません。count=" + updated);
         }
@@ -67,8 +69,7 @@ public class StockMovementService {
                 request.getQuantity(),
                 previousQuantity,
                 currentQuantity,
-                processedAt
-        );
+                processedAt);
         if (inserted != 1) {
             throw new IllegalStateException("履歴登録件数が1件ではありません。count=" + inserted);
         }
@@ -80,8 +81,7 @@ public class StockMovementService {
                 currentQuantity,
                 request.getMovementType(),
                 request.getQuantity(),
-                processedAt
-        );
+                processedAt);
     }
 
     private void validateRequest(StockMovementRequest request) {
