@@ -8,4 +8,4 @@ cd kyocera-inventory
 ./gradlew :backend-api:openApiGenerate
 ```
 
-`build/`配下は自動生成物なので直接編集せず、仕様変更はYAMLへ戻して再生成してください。Day2の`warehouseId` Exerciseは完了済みです。Day4では`POST /api/stock-movements`のINを完成させ、OUTのBackend業務処理をExerciseとして残しています。
+`build/`配下は自動生成物なので直接編集せず、仕様変更はYAMLへ戻して再生成してください。Day2の`warehouseId` ExerciseとDay4のOUT Exerciseは完了済みです。

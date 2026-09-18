@@ -4,7 +4,7 @@
 
 - 学習用仮定: `ITEM001`をBarcode / QRから読み取った文字列とみなす。実Camera・Scannerは使わない。
 - 学習用仮定: `POST /api/stock-movements`、HTTP 400／409／500の使い分け、`stock_history` Schemaは実案件仕様ではない。
-- 今回の完成範囲: 入庫（IN）はFrontendからDBまで完成。出庫（OUT）はAPI契約とButtonまで用意し、Backend業務処理をExerciseとして残す。
+- 完成範囲: 入庫（IN）と出庫（OUT）がFrontendからDBまで完成し、在庫不足Validationも実装済み。
 
 ## 処理FlowとCodeを追う順番
 
@@ -38,10 +38,10 @@ UPDATEだけCommitされてHistory INSERTが失敗すると、現在庫は変わ
 | HTTP | 区分 | 例 |
 |---:|---|---|
 | 400 | Request Validation | quantityが0、必須値なし、JSON不正 |
-| 409 | 業務Error | 在庫なし、出庫時の在庫不足、現在はOUT Exercise未実装 |
+| 409 | 業務Error | 在庫なし、出庫時の在庫不足 |
 | 500 | 予期しないServer Error | DB障害、想定外のRuntime Exception |
 
-現在のOUTは`OUT_MOVEMENT_NOT_IMPLEMENTED`を409で返します。Exercise完了後は、出庫可能なら成功、現在庫未満なら`INSUFFICIENT_STOCK`の409になるよう置き換えます。
+現在庫未満なら出庫に成功し、現在庫を超える場合は`INSUFFICIENT_STOCK`の409を返します。
 
 ## 起動と自動Test
 
@@ -82,7 +82,7 @@ curl -i -X POST http://localhost:8081/api/stock-movements \
   -d '{"itemCode":"ITEM001","warehouseId":1,"movementType":"IN","quantity":0}'
 ```
 
-OUT Exerciseの現在地（409）:
+在庫不足Error（409）:
 
 ```bash
 curl -i -X POST http://localhost:8081/api/stock-movements \
@@ -101,8 +101,8 @@ curl -i -X POST http://localhost:8081/api/stock-movements \
 7. POST `/api/stock-movements`のRequest PayloadとResponseを確認する。
 8. `previousQuantity`と`currentQuantity`を画面表示と比較する。
 9. psqlで`inventory`と`stock_history`を確認する。
-10. 出庫を押し、現在は409と`OUT_MOVEMENT_NOT_IMPLEMENTED`になることを確認する。
-11. Exercise完了後、現在庫より大きい出庫数量で409 `INSUFFICIENT_STOCK`を確認する。
+10. 出庫を押し、在庫数が減ることを確認する。
+11. 現在庫より大きい出庫数量で409 `INSUFFICIENT_STOCK`を確認する。
 
 ## psqlで操作前後を比較
 
@@ -128,18 +128,18 @@ ORDER BY history_id DESC;
 
 `StockMovementTransactionTest.rollsBackInventoryWhenHistoryInsertFails`は、Test専用Schemaで`movement_type`を1文字に制限します。Serviceは先にinventoryをUPDATEし、その後`IN`のHistory INSERTで意図的に失敗します。Serviceから例外が戻った後、inventoryが120のまま、Historyが0件であることを検証します。
 
-## 自分用Exercise: OUTを完成させる
+## 完了済みExercise: OUT
 
-完成Codeはここには載せません。INを手本に次を実装してください。
+INを手本に次を実装し、完了済みです。
 
-1. `StockMovementService`: `OUT_MOVEMENT_NOT_IMPLEMENTED`の分岐を見る。
+1. `StockMovementService`: OUT分岐を見る。
 2. 現在庫とRequest数量を比較し、不足時は業務例外を返す。
 3. 足りる場合は減算した数量で、同じUPDATE／INSERT経路を再利用する。
 4. `StockMovementServiceTest`: 出庫成功、不足、quantity不正の期待値を追加する。
 5. `StockMovementTransactionTest`: OUT成功時のinventory／Historyを追加する。
 6. Browserで現在庫より大きい数量を出庫し、409を確認する。
 
-Hint: Transaction Boundaryは増やしません。Controller、Mapper Interface、XML、OpenAPI enumはすでにOUTを受け取れます。「計算と業務Validationをどこへ置くか」に集中してください。
+Transaction Boundaryは増やさず、INと同じUPDATE／INSERT経路を再利用しています。
 
 ## 説明練習Question
 
@@ -168,11 +168,11 @@ Transaction:
 - Serviceのprocess全体をBoundaryにし、SELECT FOR UPDATE、UPDATE、INSERTを1 Transactionにしました。
 
 Testした正常系／異常系:
-- 入庫成功、quantity不正、OUT未実装409、History INSERT失敗時Rollbackを確認しました。
+- 入庫成功、出庫成功、quantity不正、在庫不足409、History INSERT失敗時Rollbackを確認しました。
 
 現在の問題:
-- 出庫の在庫減算と在庫不足ValidationはExerciseとして未実装です。
+- Day4のOUT Exerciseまで完了済みです。
 
 切り分け済み:
-- FrontendのOUT Request生成まではTest済みで、Backend Serviceの分岐以降が未実装です。
+- Frontend、Backend Service、MyBatis、DB更新まで切り分け済みです。
 ```

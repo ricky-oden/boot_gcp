@@ -106,7 +106,7 @@ export function StockOperationPage() {
             <button type="button" disabled={loading} onClick={() => handleMovement('IN')}>入庫</button>
             <button type="button" className="secondary" disabled={loading} onClick={() => handleMovement('OUT')}>出庫</button>
           </div>
-          <small>出庫Backend処理はDay4 Exerciseです。</small>
+          <small>出庫時は在庫不足Validationを行います。</small>
         </section>
       )}
 

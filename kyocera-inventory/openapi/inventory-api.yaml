@@ -49,7 +49,7 @@ paths:
       operationId: createStockMovement
       summary: 在庫の入出庫を登録する
       description: >-
-        学習用の仮APIです。INは実装済み、OUTの在庫減算と在庫不足判定はDay4 Exerciseです。
+        学習用の仮APIです。IN／OUTと、OUT時の在庫不足判定を扱います。
       requestBody:
         required: true
         content:

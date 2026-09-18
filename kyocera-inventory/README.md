@@ -13,7 +13,7 @@
 ```text
 kyocera-inventory/
 ├── backend-api/       Java 17 + Spring Boot + Gradle
-├── batch/             Day5用placeholder
+├── batch/             Spring Batch日次入出庫集計
 ├── frontend-pc/       React + Redux Toolkit PC在庫検索
 ├── frontend-mobile/   React + TypeScript Smartphone在庫入出庫
 ├── openapi/           OpenAPI 3.0.3 YAML（API仕様の正）
@@ -32,6 +32,7 @@ kyocera-inventory/
 | OpenAPI Generator | 6.6.0 | Gradle Plugin、Spring 2系の`javax` Codeを生成 |
 | MyBatis Starter | 2.3.2 | Spring Boot 2.7対応系列 |
 | springdoc-openapi | 1.8.0 | Spring Boot 2向けv1系列の最終安定版 |
+| Spring Batch | 4.3.10 | Spring Boot 2.7.18のDependency Managementに従う |
 
 Spring Boot 2.7.18はJava 17およびGradle 7.xをサポートします。Spring Boot 2.7.4との差分はpatch-levelの学習環境上の差として扱い、実案件Versionを2.7.18と断定しません。
 
@@ -72,7 +73,13 @@ Form入力はReact Hook Form、検索結果／Loading／ErrorはReduxへ分け�
 
 `http://localhost:5175/stock-operation`で、Barcode相当の商品Code入力、在庫検索、入庫、画面在庫更新を追えます。Backendでは`@Transactional`の範囲でMyBatisの在庫UPDATEと`stock_history` INSERTを実行します。
 
-入庫は完成しています。出庫ButtonとOpenAPI契約はありますが、在庫減算・在庫不足Validation・Backend Testは学習者Exerciseとして残しています。現在のOUTはHTTP 409 `OUT_MOVEMENT_NOT_IMPLEMENTED`です。
+入庫と出庫の両方が完成しています。出庫では在庫減算と在庫不足Validationを行い、不足時はHTTP 409 `INSUFFICIENT_STOCK`を返します。
+
+## Day5: Spring Batch日次集計
+
+`dailyStockSummaryJob`が`businessDate`の`stock_history`を読み、商品・倉庫単位のIN／OUT数量を`daily_stock_summary`へ保存します。Chunk Sizeは2です。
+
+非識別Parameterで意図的にFAILEDを作り、同じJobInstanceをRestartしてcheckpoint以降の残件を処理できます。Batch serviceはCompose profile `batch`へ分離しており、Online API起動時には自動実行されません。
 
 ## 最短の起動方法（Docker Compose）
 
@@ -147,8 +154,9 @@ DevContainer内の`localhost`はDevContainer自身です。Docker Desktop側で�
 - `docs/DAY2_SQL_CHECK.md`: psql／DBeaver確認SQL
 - `docs/DAY2_EXERCISE.md`: `warehouseId`検索の自習ヒント
 - `docs/DAY3_REACT_REDUX.md`: Redux処理Flow、Browser練習、Exercise、Daily報告
-- `docs/DAY4_STOCK_MOVEMENT.md`: Smartphone、更新Transaction、History、Rollback、OUT Exercise
+- `docs/DAY4_STOCK_MOVEMENT.md`: Smartphone、更新Transaction、History、Rollback、完了済みOUT Exercise
+- `docs/DAY5_SPRING_BATCH.md`: Job／Step／Chunk、Metadata、Failure、Restart、倉庫Parameter Exercise
 
-## Day4終了時点で未実装
+## Day5終了時点で未実装
 
-OUTの在庫減算と在庫不足Validation（Exercise）、Spring Batch、Checkstyle、GCS、GKE、Jira／本格的な結合Test Scenarioは後続Dayで扱います。
+Batchの`warehouseId` Parameter（Exercise）、Checkstyle、GCS、GKE、Jira／本格的な結合Test Scenarioは後続Dayで扱います。
