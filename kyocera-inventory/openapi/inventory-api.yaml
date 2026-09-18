@@ -9,6 +9,8 @@ servers:
 tags:
   - name: inventories
     description: 在庫検索
+  - name: stock-movements
+    description: 在庫入出庫（Day4学習用）
 paths:
   /api/inventories:
     get:
@@ -40,6 +42,45 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/InventoryResponse'
+  /api/stock-movements:
+    post:
+      tags:
+        - stock-movements
+      operationId: createStockMovement
+      summary: 在庫の入出庫を登録する
+      description: >-
+        学習用の仮APIです。INは実装済み、OUTの在庫減算と在庫不足判定はDay4 Exerciseです。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StockMovementRequest'
+      responses:
+        '200':
+          description: 在庫更新結果
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockMovementResponse'
+        '400':
+          description: Request Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Business Rule Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Unexpected Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 components:
   schemas:
     InventoryResponse:
@@ -69,4 +110,82 @@ components:
           type: integer
           format: int32
         status:
+          type: string
+    MovementType:
+      type: string
+      enum:
+        - IN
+        - OUT
+    StockMovementRequest:
+      type: object
+      required:
+        - itemCode
+        - warehouseId
+        - movementType
+        - quantity
+      properties:
+        itemCode:
+          type: string
+          minLength: 1
+          maxLength: 30
+        warehouseId:
+          type: integer
+          format: int64
+          minimum: 1
+        movementType:
+          $ref: '#/components/schemas/MovementType'
+        quantity:
+          type: integer
+          format: int32
+          minimum: 1
+    StockMovementResponse:
+      type: object
+      required:
+        - itemCode
+        - warehouseId
+        - previousQuantity
+        - currentQuantity
+        - movementType
+        - quantity
+        - processedAt
+      properties:
+        itemCode:
+          type: string
+        warehouseId:
+          type: integer
+          format: int64
+        previousQuantity:
+          type: integer
+          format: int32
+        currentQuantity:
+          type: integer
+          format: int32
+        movementType:
+          $ref: '#/components/schemas/MovementType'
+        quantity:
+          type: integer
+          format: int32
+        processedAt:
+          type: string
+          format: date-time
+    ErrorResponse:
+      type: object
+      required:
+        - timestamp
+        - status
+        - code
+        - message
+        - path
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: integer
+          format: int32
+        code:
+          type: string
+        message:
+          type: string
+        path:
           type: string

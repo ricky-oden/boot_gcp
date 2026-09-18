@@ -10,7 +10,7 @@
     },
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
   },
-  "forwardPorts": [3000, 5174, 8080, 8081, 5432, 5433],
+  "forwardPorts": [3000, 5174, 5175, 8080, 8081, 5432, 5433],
   "customizations": {
     "vscode": {
       "extensions": [
@@ -22,6 +22,6 @@
       ]
     }
   },
-  "postCreateCommand": "cd frontend && npm ci && cd ../kyocera-inventory/frontend-pc && npm ci",
+  "postCreateCommand": "cd frontend && npm ci && cd ../kyocera-inventory/frontend-pc && npm ci && cd ../frontend-mobile && npm ci",
   "remoteUser": "vscode"
 }

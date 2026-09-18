@@ -15,7 +15,7 @@ kyocera-inventory/
 ├── backend-api/       Java 17 + Spring Boot + Gradle
 ├── batch/             Day5用placeholder
 ├── frontend-pc/       React + Redux Toolkit PC在庫検索
-├── frontend-mobile/   Day4用placeholder
+├── frontend-mobile/   React + TypeScript Smartphone在庫入出庫
 ├── openapi/           OpenAPI 3.0.3 YAML（API仕様の正）
 ├── docs/              学習記録
 └── docker-compose.yml 京セラ専用Backend/PostgreSQL
@@ -40,6 +40,8 @@ Spring Boot 2.7.18はJava 17およびGradle 7.xをサポートします。Spring
 | 用途 | 既存申請環境 | 京セラ環境 |
 |---|---:|---:|
 | Backend | 8080 | 8081 |
+| PC Frontend | 3000 | 5174 |
+| Smartphone Frontend | - | 5175 |
 | PostgreSQL Host Port | 5432 | 5433 |
 | Database | workflow | kyocera_inventory |
 | Compose Project | root既存構成 | kyocera-inventory |
@@ -58,13 +60,19 @@ OpenAPI YAML → generated Interface/Model → Controller → Service
 
 生成Codeは`backend-api/build/generated/openapi/`へ出力されます。`build/`配下を直接編集せず、必ず`openapi/inventory-api.yaml`を変更して再生成します。
 
-Day2の`warehouseId` Backend Exerciseは学習者実装済みです。PC画面への条件追加はDay3 Exerciseとして残しています。
+Day2の`warehouseId` Backend Exerciseと、Day3のPC画面条件追加／Reset Exerciseは学習者実装済みです。
 
 ## Day3: PC向け在庫検索画面
 
 `http://localhost:5174/inventory`で、Item Code入力からRedux Toolkitの`createAsyncThunk`、Axios、Backend API、selector、Table再描画までを追えます。
 
 Form入力はReact Hook Form、検索結果／Loading／ErrorはReduxへ分けています。Local接続はVite Proxyを使い、京セラBackendへCORS変更を加えていません。
+
+## Day4: Smartphone在庫入出庫
+
+`http://localhost:5175/stock-operation`で、Barcode相当の商品Code入力、在庫検索、入庫、画面在庫更新を追えます。Backendでは`@Transactional`の範囲でMyBatisの在庫UPDATEと`stock_history` INSERTを実行します。
+
+入庫は完成しています。出庫ButtonとOpenAPI契約はありますが、在庫減算・在庫不足Validation・Backend Testは学習者Exerciseとして残しています。現在のOUTはHTTP 409 `OUT_MOVEMENT_NOT_IMPLEMENTED`です。
 
 ## 最短の起動方法（Docker Compose）
 
@@ -75,6 +83,8 @@ docker compose -f kyocera-inventory/docker-compose.yml up -d --build
 docker compose -f kyocera-inventory/docker-compose.yml ps
 curl http://localhost:8081/api/health
 curl "http://localhost:8081/api/inventories?itemCode=ITEM001"
+curl -X POST http://localhost:8081/api/stock-movements -H 'Content-Type: application/json' \
+  -d '{"itemCode":"ITEM001","warehouseId":1,"movementType":"IN","quantity":5}'
 docker compose -f kyocera-inventory/docker-compose.yml exec kyocera-db \
   psql -U kyocera -d kyocera_inventory -c "SELECT current_database(), current_user;"
 ```
@@ -137,7 +147,8 @@ DevContainer内の`localhost`はDevContainer自身です。Docker Desktop側で�
 - `docs/DAY2_SQL_CHECK.md`: psql／DBeaver確認SQL
 - `docs/DAY2_EXERCISE.md`: `warehouseId`検索の自習ヒント
 - `docs/DAY3_REACT_REDUX.md`: Redux処理Flow、Browser練習、Exercise、Daily報告
+- `docs/DAY4_STOCK_MOVEMENT.md`: Smartphone、更新Transaction、History、Rollback、OUT Exercise
 
-## Day2終了時点で未実装
+## Day4終了時点で未実装
 
-PC画面の`warehouseId`検索とReset（Exercise）、Smartphone、Spring Batch、Checkstyle、GCS、GKE、Jira／本格的な結合Test Scenarioは後続Dayで扱います。
+OUTの在庫減算と在庫不足Validation（Exercise）、Spring Batch、Checkstyle、GCS、GKE、Jira／本格的な結合Test Scenarioは後続Dayで扱います。

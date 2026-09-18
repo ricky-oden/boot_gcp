@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.kyocera.inventory.stockmovement.mapper.StockMovementMapper">
+
+    <resultMap id="stockMovementRowMap"
+               type="com.example.kyocera.inventory.stockmovement.mapper.StockMovementRow">
+        <id property="inventoryId" column="inventory_id"/>
+        <result property="itemCode" column="item_code"/>
+        <result property="warehouseId" column="warehouse_id"/>
+        <result property="quantity" column="quantity"/>
+    </resultMap>
+
+    <select id="selectForUpdate" resultMap="stockMovementRowMap">
+        SELECT inventory_id, item_code, warehouse_id, quantity
+        FROM inventory
+        WHERE item_code = #{itemCode}
+          AND warehouse_id = #{warehouseId}
+        FOR UPDATE
+    </select>
+
+    <update id="updateQuantity">
+        UPDATE inventory
+        SET quantity = #{quantity},
+            updated_at = #{updatedAt}
+        WHERE inventory_id = #{inventoryId}
+    </update>
+
+    <insert id="insertHistory">
+        INSERT INTO stock_history (
+            inventory_id,
+            movement_type,
+            quantity,
+            before_quantity,
+            after_quantity,
+            processed_at
+        ) VALUES (
+            #{inventoryId},
+            #{movementType},
+            #{quantity},
+            #{beforeQuantity},
+            #{afterQuantity},
+            #{processedAt}
+        )
+    </insert>
+</mapper>
