@@ -5,7 +5,7 @@ import { Button } from '../components/design-system/Button'
 import { Table } from '../components/design-system/Table'
 import type { TableColumn } from '../components/design-system/Table'
 import { TextField } from '../components/design-system/TextField'
-import { fetchInventories } from '../features/inventory/inventorySlice'
+import { fetchInventories, resetInventoryState } from '../features/inventory/inventorySlice'
 import {
   selectInventoryError,
   selectInventoryHasSearched,
@@ -17,6 +17,7 @@ import type { InventoryItem, InventorySearchCriteria } from '../features/invento
 
 interface InventorySearchForm {
   itemCode: string
+  warehouseId: string
 }
 
 const columns: TableColumn<InventoryItem>[] = [
@@ -39,15 +40,24 @@ export function InventoryPage() {
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
-  } = useForm<InventorySearchForm>({ defaultValues: { itemCode: '' } })
+  } = useForm<InventorySearchForm>({ defaultValues: { itemCode: '', warehouseId: '' } })
 
-  const onSubmit = ({ itemCode }: InventorySearchForm) => {
-    const trimmedItemCode = itemCode.trim()
-    const criteria: InventorySearchCriteria = trimmedItemCode
-      ? { itemCode: trimmedItemCode }
-      : {}
+  const onSubmit = ({ itemCode, warehouseId }: InventorySearchForm) => {
+    const normalizedItemCode = itemCode ? itemCode.trim() : undefined
+    const normalizedWarehouseId = warehouseId ? Number(warehouseId) : undefined
+    const criteria: InventorySearchCriteria =
+    {
+      itemCode: normalizedItemCode,
+      warehouseId: normalizedWarehouseId
+    }
     dispatch(fetchInventories(criteria))
+  }
+
+  const handleReset = () => {
+    dispatch(resetInventoryState())
+    reset()
   }
 
   return (
@@ -73,8 +83,22 @@ export function InventoryPage() {
             })}
             error={errors.itemCode?.message}
           />
+          <TextField
+            label="Warehouse ID"
+            placeholder="1"
+            {...register('warehouseId', {
+              pattern: {
+                value: /^[0-9]*$/,
+                message: 'Warehouse IDは半角数字で入力してください。',
+              },
+            })}
+            error={errors.warehouseId?.message}
+          />
           <Button disabled={loading} type="submit">
             Search
+          </Button>
+          <Button disabled={loading} type="button" onClick={handleReset}>
+            Reset
           </Button>
         </form>
       </section>
@@ -85,12 +109,13 @@ export function InventoryPage() {
           {lastSearchCondition && (
             <span className="last-condition">
               Item Code: {lastSearchCondition.itemCode || 'All'}
+              , Warehouse ID: {lastSearchCondition.warehouseId || 'All'}
             </span>
           )}
         </div>
 
         {!hasSearched && !loading && !error && (
-          <p className="state-message">Item Codeを入力してSearchを押してください。</p>
+          <p className="state-message">Item CodeやWarehouse IDを入力してSearchを押してください。</p>
         )}
         {loading && <p className="state-message" role="status">Loading...</p>}
         {error && <Alert tone="error">{error}</Alert>}

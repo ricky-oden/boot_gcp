@@ -10,6 +10,7 @@ export interface InventoryItem {
 
 export interface InventorySearchCriteria {
   itemCode?: string
+  warehouseId?: number
 }
 
 export interface InventoryState {

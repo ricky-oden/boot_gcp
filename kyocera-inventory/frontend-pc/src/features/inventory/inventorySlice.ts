@@ -33,7 +33,9 @@ export const fetchInventories = createAsyncThunk<
 const inventorySlice = createSlice({
   name: 'inventory',
   initialState: initialInventoryState,
-  reducers: {},
+  reducers: {
+    resetInventoryState: () => ({ ...initialInventoryState }),
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchInventories.pending, (state, action) => {
@@ -54,5 +56,7 @@ const inventorySlice = createSlice({
       })
   },
 })
+
+export const { resetInventoryState } = inventorySlice.actions
 
 export default inventorySlice.reducer
