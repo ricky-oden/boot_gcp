@@ -38,10 +38,9 @@ public class DailyStockSummaryJobConfiguration {
     public Job dailyStockSummaryJob(
             JobBuilderFactory jobBuilderFactory,
             Step dailyStockSummaryStep,
-            JobParametersValidator businessDateValidator
-    ) {
+            JobParametersValidator jobParametersValidator) {
         return jobBuilderFactory.get(JOB_NAME)
-                .validator(businessDateValidator)
+                .validator(jobParametersValidator)
                 .start(dailyStockSummaryStep)
                 .build();
     }
@@ -51,8 +50,7 @@ public class DailyStockSummaryJobConfiguration {
             StepBuilderFactory stepBuilderFactory,
             ItemReader<StockHistoryAggregate> stockHistoryAggregateReader,
             ItemProcessor<StockHistoryAggregate, DailyStockSummary> dailyStockSummaryProcessor,
-            ItemWriter<DailyStockSummary> dailyStockSummaryWriter
-    ) {
+            ItemWriter<DailyStockSummary> dailyStockSummaryWriter) {
         return stepBuilderFactory.get(STEP_NAME)
                 .<StockHistoryAggregate, DailyStockSummary>chunk(CHUNK_SIZE)
                 .reader(stockHistoryAggregateReader)
@@ -65,30 +63,36 @@ public class DailyStockSummaryJobConfiguration {
     @StepScope
     public JdbcCursorItemReader<StockHistoryAggregate> stockHistoryAggregateReader(
             DataSource dataSource,
-            @Value("#{jobParameters['businessDate']}") String businessDateValue
-    ) {
+            @Value("#{jobParameters['businessDate']}") String businessDateValue,
+            @Value("#{jobParameters['warehouseId']}") String warehouseIdValue) {
         LocalDate businessDate = LocalDate.parse(businessDateValue);
+        Long warehouseId = warehouseIdValue != null
+        ? Long.parseLong(warehouseIdValue)
+        : null;
         Timestamp start = Timestamp.from(businessDate.atStartOfDay().toInstant(ZoneOffset.UTC));
         Timestamp end = Timestamp.from(businessDate.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC));
+
+        String sql = "SELECT i.item_code, i.warehouse_id, "
+                + "SUM(CASE WHEN sh.movement_type = 'IN' THEN sh.quantity ELSE 0 END) "
+                + "AS total_in_quantity, "
+                + "SUM(CASE WHEN sh.movement_type = 'OUT' THEN sh.quantity ELSE 0 END) "
+                + "AS total_out_quantity, "
+                + "COUNT(*) AS movement_count "
+                + "FROM stock_history sh "
+                + "INNER JOIN inventory i ON i.inventory_id = sh.inventory_id "
+                + "WHERE sh.processed_at >= ? AND sh.processed_at < ? ";
+
+        if (warehouseId != null) {
+            sql += "AND i.warehouse_id = ? ";
+        }
+
+        sql += "GROUP BY i.item_code, i.warehouse_id "
+                + "ORDER BY i.item_code, i.warehouse_id";
 
         return new JdbcCursorItemReaderBuilder<StockHistoryAggregate>()
                 .name("stockHistoryAggregateReader")
                 .dataSource(dataSource)
-                .sql("SELECT i.item_code, i.warehouse_id, "
-                        + "SUM(CASE WHEN sh.movement_type = 'IN' THEN sh.quantity ELSE 0 END) "
-                        + "AS total_in_quantity, "
-                        + "SUM(CASE WHEN sh.movement_type = 'OUT' THEN sh.quantity ELSE 0 END) "
-                        + "AS total_out_quantity, "
-                        + "COUNT(*) AS movement_count "
-                        + "FROM stock_history sh "
-                        + "INNER JOIN inventory i ON i.inventory_id = sh.inventory_id "
-                        + "WHERE sh.processed_at >= ? AND sh.processed_at < ? "
-                        + "GROUP BY i.item_code, i.warehouse_id "
-                        + "ORDER BY i.item_code, i.warehouse_id")
-                .preparedStatementSetter(statement -> {
-                    statement.setTimestamp(1, start);
-                    statement.setTimestamp(2, end);
-                })
+                .sql(sql)
                 .rowMapper((resultSet, rowNumber) -> {
                     StockHistoryAggregate row = new StockHistoryAggregate();
                     row.setItemCode(resultSet.getString("item_code"));
@@ -98,6 +102,13 @@ public class DailyStockSummaryJobConfiguration {
                     row.setMovementCount(resultSet.getInt("movement_count"));
                     return row;
                 })
+                .preparedStatementSetter((preparedStatement) -> {
+                    preparedStatement.setTimestamp(1, start);
+                    preparedStatement.setTimestamp(2, end);
+                    if (warehouseId != null) {
+                        preparedStatement.setLong(3, warehouseId);
+                    }
+                })
                 .saveState(true)
                 .build();
     }
@@ -106,12 +117,10 @@ public class DailyStockSummaryJobConfiguration {
     @StepScope
     public DailyStockSummaryProcessor dailyStockSummaryProcessor(
             @Value("#{jobParameters['businessDate']}") String businessDateValue,
-            @Value("#{jobParameters['failOnItemCode']}") String failOnItemCode
-    ) {
+            @Value("#{jobParameters['failOnItemCode']}") String failOnItemCode) {
         return new DailyStockSummaryProcessor(
                 LocalDate.parse(businessDateValue),
-                failOnItemCode
-        );
+                failOnItemCode);
     }
 
     @Bean
@@ -120,17 +129,31 @@ public class DailyStockSummaryJobConfiguration {
     }
 
     @Bean
-    public JobParametersValidator businessDateValidator() {
+    public JobParametersValidator jobParametersValidator() {
         return parameters -> {
-            JobParameter parameter = parameters.getParameters().get("businessDate");
-            if (parameter == null || parameter.getValue() == null) {
+            JobParameter businessDate = parameters.getParameters().get("businessDate");
+            JobParameter warehouseId = parameters.getParameters().get("warehouseId");
+            if (businessDate == null || businessDate.getValue() == null) {
                 throw new JobParametersInvalidException("businessDateは必須です。例: 2026-09-18");
             }
             try {
-                LocalDate.parse(parameter.getValue().toString());
+                LocalDate.parse(businessDate.getValue().toString());
             } catch (RuntimeException exception) {
                 throw new JobParametersInvalidException(
                         "businessDateはyyyy-MM-dd形式で指定してください。");
+            }
+            if (warehouseId != null && warehouseId.getValue() != null) {
+
+                try {
+                    Long warehouseIdValue = Long.parseLong(warehouseId.getValue().toString());
+                    if (warehouseIdValue <= 0) {
+                        throw new JobParametersInvalidException(
+                                "warehouseIdは正の数で指定してください。");
+                    }
+                } catch (NumberFormatException exception) {
+                    throw new JobParametersInvalidException(
+                            "warehouseIdは数値で指定してください。");
+                }
             }
         };
     }
