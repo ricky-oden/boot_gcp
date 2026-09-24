@@ -1,8 +1,24 @@
 plugins {
     id 'java'
+    id 'checkstyle'
+    id 'jacoco'
     id 'org.springframework.boot' version '2.7.18'
     id 'io.spring.dependency-management' version '1.1.4'
     id 'org.openapi.generator' version '6.6.0'
+}
+
+checkstyle {
+    toolVersion = '10.12.7'
+    configFile = rootProject.file('config/checkstyle/checkstyle.xml')
+}
+
+tasks.named('checkstyleMain') {
+    // OpenAPI-generated sources are regenerated from YAML and are not edited by hand.
+    source = fileTree('src/main/java')
+}
+
+jacoco {
+    toolVersion = '0.8.11'
 }
 
 java {
@@ -76,4 +92,14 @@ tasks.named('processResources') {
 
 tasks.named('test') {
     useJUnitPlatform()
+    finalizedBy tasks.named('jacocoTestReport')
+}
+
+tasks.named('jacocoTestReport') {
+    dependsOn tasks.named('test')
+    reports {
+        xml.required = true
+        html.required = true
+        csv.required = false
+    }
 }

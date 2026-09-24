@@ -225,14 +225,14 @@ docker compose -f kyocera-inventory/docker-compose.yml --profile batch run --rm 
 12. Summaryが3行になったことを確認する。
 13. ITEM001の値が倍増していないことを確認する。
 
-## 自分用Exercise: warehouseId Parameter
+## 完了済みExercise: warehouseId Parameter
 
-現在の識別Parameterは`businessDate`だけです。`warehouseId`を追加し、対象倉庫だけ集計できるようにしてください。完成Codeは記載しません。
+学習者が`warehouseId`を追加し、対象倉庫だけを集計できる状態まで実装済みです。以下はCode Review時の確認観点として残します。
 
 変更候補:
 
 - `DailyStockSummaryJobConfiguration.stockHistoryAggregateReader`: Parameter取得、SQL条件、PreparedStatementの順番。
-- `businessDateValidator`: warehouseIdを必須にするか任意にするかを決める。
+- `DailyStockSummaryJobConfiguration.jobParametersValidator`: warehouseIdを必須にするか任意にするかを決める。
 - `DailyStockSummaryJobTest.parameters`: 識別Parameterの組立て。
 - 正常Test: 他倉庫が含まれない期待値。
 - README／このGuide: Command例。

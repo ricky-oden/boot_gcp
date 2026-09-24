@@ -67,8 +67,8 @@ public class DailyStockSummaryJobConfiguration {
             @Value("#{jobParameters['warehouseId']}") String warehouseIdValue) {
         LocalDate businessDate = LocalDate.parse(businessDateValue);
         Long warehouseId = warehouseIdValue != null
-        ? Long.parseLong(warehouseIdValue)
-        : null;
+                ? Long.parseLong(warehouseIdValue)
+                : null;
         Timestamp start = Timestamp.from(businessDate.atStartOfDay().toInstant(ZoneOffset.UTC));
         Timestamp end = Timestamp.from(businessDate.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC));
 

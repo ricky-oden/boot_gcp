@@ -1,0 +1,74 @@
+# Day6 learning manifest. This is not the real project's Kubernetes manifest.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kyocera-backend-config
+data:
+  SERVER_PORT: "8081"
+  DB_URL: jdbc:postgresql://postgres.example.internal:5432/kyocera_inventory
+  DB_USER: kyocera
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kyocera-backend-api
+  labels:
+    app: kyocera-backend-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kyocera-backend-api
+  template:
+    metadata:
+      labels:
+        app: kyocera-backend-api
+    spec:
+      containers:
+        - name: backend-api
+          image: asia-northeast1-docker.pkg.dev/PROJECT_ID/REPOSITORY/kyocera-backend-api:TAG
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8081
+          envFrom:
+            - configMapRef:
+                name: kyocera-backend-config
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: kyocera-db-credentials
+                  key: password
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kyocera-backend-api
+spec:
+  selector:
+    app: kyocera-backend-api
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+  type: ClusterIP

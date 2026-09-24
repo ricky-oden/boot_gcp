@@ -17,6 +17,8 @@ kyocera-inventory/
 ├── frontend-pc/       React + Redux Toolkit PC在庫検索
 ├── frontend-mobile/   React + TypeScript Smartphone在庫入出庫
 ├── openapi/           OpenAPI 3.0.3 YAML（API仕様の正）
+├── config/checkstyle/ 学習用静的解析Rule
+├── k8s/               学習用GKE manifestとkubectl Guide
 ├── docs/              学習記録
 └── docker-compose.yml 京セラ専用Backend/PostgreSQL
 ```
@@ -33,6 +35,8 @@ kyocera-inventory/
 | MyBatis Starter | 2.3.2 | Spring Boot 2.7対応系列 |
 | springdoc-openapi | 1.8.0 | Spring Boot 2向けv1系列の最終安定版 |
 | Spring Batch | 4.3.10 | Spring Boot 2.7.18のDependency Managementに従う |
+| Checkstyle | 10.12.7 | 学習用の小さいRule Set |
+| JaCoCo | 0.8.11 | HTML／XML Coverage Reportを生成 |
 
 Spring Boot 2.7.18はJava 17およびGradle 7.xをサポートします。Spring Boot 2.7.4との差分はpatch-levelの学習環境上の差として扱い、実案件Versionを2.7.18と断定しません。
 
@@ -80,6 +84,14 @@ Form入力はReact Hook Form、検索結果／Loading／ErrorはReduxへ分け�
 `dailyStockSummaryJob`が`businessDate`の`stock_history`を読み、商品・倉庫単位のIN／OUT数量を`daily_stock_summary`へ保存します。Chunk Sizeは2です。
 
 非識別Parameterで意図的にFAILEDを作り、同じJobInstanceをRestartしてcheckpoint以降の残件を処理できます。Batch serviceはCompose profile `batch`へ分離しており、Online API起動時には自動実行されません。
+
+Day5 Exerciseの`warehouseId` Parameter追加も学習者実装済みです。
+
+## Day6: CIとApplication Developer向けGKE確認
+
+Backend／Batchへ学習用CheckstyleとJaCoCoを追加し、京セラ領域専用のGitHub Actions WorkflowでOpenAPI検証、静的解析、Test、Coverage、Buildを分離して確認できます。PC／Mobileも独立JobでTestとBuildを行います。
+
+GKEについては実Clusterを作らず、学習用Deployment／Service／ConfigMap manifestと、`get → describe → logs`の調査手順を用意しています。実案件のCI・manifestを再現したものではありません。
 
 ## 最短の起動方法（Docker Compose）
 
@@ -156,7 +168,9 @@ DevContainer内の`localhost`はDevContainer自身です。Docker Desktop側で�
 - `docs/DAY3_REACT_REDUX.md`: Redux処理Flow、Browser練習、Exercise、Daily報告
 - `docs/DAY4_STOCK_MOVEMENT.md`: Smartphone、更新Transaction、History、Rollback、完了済みOUT Exercise
 - `docs/DAY5_SPRING_BATCH.md`: Job／Step／Chunk、Metadata、Failure、Restart、倉庫Parameter Exercise
+- `docs/DAY6_CI_GKE.md`: Checkstyle、JaCoCo、GitHub Actions、Failure、PR、Docker／GKE／Logging／GCS
+- `k8s/README.md`: 学習用manifestとkubectl確認手順
 
-## Day5終了時点で未実装
+## Day6終了時点で未実装
 
-Batchの`warehouseId` Parameter（Exercise）、Checkstyle、GCS、GKE、Jira／本格的な結合Test Scenarioは後続Dayで扱います。
+実Artifact RegistryへのPush、実GKE Deploy、GCS Application連携、Jira／本格的な結合Test Scenarioは後続Dayまたは既存教材で扱います。
