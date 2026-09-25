@@ -1,0 +1,29 @@
+server:
+  port: ${SERVER_PORT:8081}
+
+spring:
+  application:
+    name: kyocera-inventory-backend-api
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/kyocera_inventory}
+    username: ${DB_USER:kyocera}
+    password: ${DB_PASSWORD:kyocera_local}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 5000
+      initialization-fail-timeout: 30000
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/schema.sql
+      data-locations: classpath:db/data.sql
+
+mybatis:
+  mapper-locations: classpath:mapper/**/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+
+springdoc:
+  swagger-ui:
+    url: /openapi/inventory-api.yaml
+    disable-swagger-default-url: true

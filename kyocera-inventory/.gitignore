@@ -1,0 +1,12 @@
+.gradle/
+**/build/
+**/node_modules/
+**/dist/
+**/*.tsbuildinfo
+**/vite.config.js
+**/vite.config.d.ts
+
+# Local-only configuration
+.env
+.env.*
+!.env.example

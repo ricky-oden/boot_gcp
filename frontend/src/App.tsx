@@ -2,6 +2,8 @@ import axios from 'axios'
 import { useCallback, useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Route, Routes } from 'react-router-dom'
+import { filterChanged, type ApplicationFilter } from './store/applicationFilterSlice'
+import { useAppDispatch, useAppSelector } from './store/hooks'
 
 export type Application = {
   id: number
@@ -25,6 +27,8 @@ export function WorkflowPage() {
   const [applications, setApplications] = useState<Application[]>([])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const dispatch = useAppDispatch()
+  const filter = useAppSelector((state) => state.applicationFilter.value)
   const { register, handleSubmit, reset } = useForm<ApplicationForm>({
     defaultValues: { title: '' },
   })
@@ -68,6 +72,10 @@ export function WorkflowPage() {
     }
   }
 
+  const visibleApplications = applications.filter(
+    (application) => filter === 'ALL' || application.status === filter,
+  )
+
   return (
     <main>
       <h1>法人向け申請ワークフロー</h1>
@@ -84,11 +92,26 @@ export function WorkflowPage() {
       {error && <p className="error">{error}</p>}
 
       <h2>申請一覧</h2>
-      {applications.length === 0 ? (
+      <fieldset className="filters">
+        <legend>状態で絞り込み</legend>
+        {(['ALL', 'PENDING', 'APPROVED'] as ApplicationFilter[]).map((value) => (
+          <label key={value}>
+            <input
+              type="radio"
+              name="application-filter"
+              value={value}
+              checked={filter === value}
+              onChange={() => dispatch(filterChanged(value))}
+            />
+            {value}
+          </label>
+        ))}
+      </fieldset>
+      {visibleApplications.length === 0 ? (
         <p>申請はまだありません。</p>
       ) : (
         <ul>
-          {applications.map((application) => (
+          {visibleApplications.map((application) => (
             <li key={application.id}>
               <div>
                 <strong>{application.title}</strong>

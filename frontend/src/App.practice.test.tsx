@@ -3,6 +3,8 @@ import userEvent from '@testing-library/user-event'
 import axios from 'axios'
 import { MemoryRouter } from 'react-router-dom'
 import App from './App'
+import { Provider } from 'react-redux'
+import { createAppStore } from './store/store'
 
 jest.mock('axios')
 const axiosMock = axios as jest.Mocked<typeof axios>
@@ -24,7 +26,9 @@ test('PENDING申請の承認ボタンを押すと承認APIを呼ぶ', async () =
   const user = userEvent.setup()
   render(
     <MemoryRouter>
-      <App />
+      <Provider store={createAppStore()}>
+        <App />
+      </Provider>
     </MemoryRouter>,
   )
 

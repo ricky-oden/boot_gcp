@@ -18,4 +18,14 @@ li div { display: grid; gap: 6px; }
 .pending { background: #fff3cd; }
 .approved { background: #d1e7dd; }
 .error { color: #b42318; }
+.filters {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
 
+.filters label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
