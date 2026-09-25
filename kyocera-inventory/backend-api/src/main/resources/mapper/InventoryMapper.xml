@@ -31,6 +31,9 @@
             <if test="itemCode != null and itemCode != ''">
                 AND i.item_code = #{itemCode}
             </if>
+            <if test="itemName != null and itemName != ''">
+                AND im.item_name LIKE CONCAT('%', #{itemName}, '%') ESCAPE '\'
+            </if>
             <if test="warehouseId != null">
                 AND i.warehouse_id = #{warehouseId}
             </if>

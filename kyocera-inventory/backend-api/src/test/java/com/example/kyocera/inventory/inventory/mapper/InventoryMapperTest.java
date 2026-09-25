@@ -21,7 +21,7 @@ class InventoryMapperTest {
 
     @Test
     void returnsOnlyRowsForSpecifiedItemCode() {
-        List<InventorySearchRow> results = inventoryMapper.search("ITEM001", null);
+        List<InventorySearchRow> results = inventoryMapper.search("ITEM001", null, null);
 
         assertThat(results).hasSize(2);
         assertThat(results).extracting(InventorySearchRow::getItemCode)
@@ -32,7 +32,7 @@ class InventoryMapperTest {
 
     @Test
     void returnsOnlyRowsForSpecifiedWarehouseId() {
-        List<InventorySearchRow> results = inventoryMapper.search(null, 1L);
+        List<InventorySearchRow> results = inventoryMapper.search(null, null, 1L);
 
         assertThat(results).hasSize(2);
         assertThat(results).extracting(InventorySearchRow::getWarehouseId)
@@ -42,8 +42,23 @@ class InventoryMapperTest {
     }
 
     @Test
+    void returnOnlyRowsForSpecifiedItemName() {
+        List<InventorySearchRow> results = inventoryMapper.search(null, "ナット", null);
+
+        assertThat(results).hasSize(1);
+        assertThat(results.get(0).getItemName()).isEqualTo("六角ナット");
+    }
+
+    @Test
+    void rerurnEscapedRowsForSpecifiedItemName() {
+        List<InventorySearchRow> results = inventoryMapper.search(null, "\\%", null);
+
+        assertThat(results).hasSize(0);
+    }
+
+    @Test
     void returnsAllRowsWhenItemCodeIsNotSpecified() {
-        List<InventorySearchRow> results = inventoryMapper.search(null, null);
+        List<InventorySearchRow> results = inventoryMapper.search(null, null, null);
 
         assertThat(results).hasSize(3);
         assertThat(results).extracting(InventorySearchRow::getInventoryId)

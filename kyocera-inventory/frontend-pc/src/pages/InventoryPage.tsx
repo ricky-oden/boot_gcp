@@ -17,6 +17,7 @@ import type { InventoryItem, InventorySearchCriteria } from '../features/invento
 
 interface InventorySearchForm {
   itemCode: string
+  itemName: string
   warehouseId: string
 }
 
@@ -42,14 +43,16 @@ export function InventoryPage() {
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<InventorySearchForm>({ defaultValues: { itemCode: '', warehouseId: '' } })
+  } = useForm<InventorySearchForm>({ defaultValues: { itemCode: '', itemName: '', warehouseId: '' } })
 
-  const onSubmit = ({ itemCode, warehouseId }: InventorySearchForm) => {
+  const onSubmit = ({ itemCode, itemName, warehouseId }: InventorySearchForm) => {
     const normalizedItemCode = itemCode ? itemCode.trim() : undefined
+    const normalizedItemName = itemName ? itemName.trim() : undefined
     const normalizedWarehouseId = warehouseId ? Number(warehouseId) : undefined
     const criteria: InventorySearchCriteria =
     {
       itemCode: normalizedItemCode,
+      itemName: normalizedItemName,
       warehouseId: normalizedWarehouseId
     }
     dispatch(fetchInventories(criteria))
@@ -84,6 +87,14 @@ export function InventoryPage() {
             error={errors.itemCode?.message}
           />
           <TextField
+            label="Item Name"
+            placeholder="ボルト"
+            {...register('itemName', {
+              maxLength: { value: 100, message: 'Item Nameは100文字以内で入力してください。' },
+            })}
+            error={errors.itemName?.message}
+          />
+          <TextField
             label="Warehouse ID"
             placeholder="1"
             {...register('warehouseId', {
@@ -109,13 +120,14 @@ export function InventoryPage() {
           {lastSearchCondition && (
             <span className="last-condition">
               Item Code: {lastSearchCondition.itemCode || 'All'}
+              , Item Name: {lastSearchCondition.itemName || 'All'}
               , Warehouse ID: {lastSearchCondition.warehouseId || 'All'}
             </span>
           )}
         </div>
 
         {!hasSearched && !loading && !error && (
-          <p className="state-message">Item CodeやWarehouse IDを入力してSearchを押してください。</p>
+          <p className="state-message">Searchを押してください。検索条件は任意です。</p>
         )}
         {loading && <p className="state-message" role="status">Loading...</p>}
         {error && <Alert tone="error">{error}</Alert>}

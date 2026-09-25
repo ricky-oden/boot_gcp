@@ -17,9 +17,12 @@ public class InventoryService {
         this.inventoryMapper = inventoryMapper;
     }
 
-    public List<InventoryResponse> search(String itemCode, Long warehouseId) {
+    public List<InventoryResponse> search(String itemCode, String itemName, Long warehouseId) {
         String normalizedItemCode = normalize(itemCode);
-        return inventoryMapper.search(normalizedItemCode, warehouseId).stream()
+        String normalizedItemName = normalize(itemName);
+        String escapedItemName = escapeLike(normalizedItemName);
+
+        return inventoryMapper.search(normalizedItemCode, escapedItemName, warehouseId).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
@@ -29,6 +32,15 @@ public class InventoryService {
             return null;
         }
         return value.trim();
+    }
+
+    private String escapeLike(String value) {
+        if (value == null) {
+            return null;
+        }
+        return value.replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_");
     }
 
     private InventoryResponse toResponse(InventorySearchRow row) {

@@ -26,6 +26,12 @@ paths:
           description: 商品コード
           schema:
             type: string
+        - name: itemName
+          in: query
+          required: false
+          description: 商品名
+          schema:
+            type: string
         - name: warehouseId
           in: query
           required: false

@@ -27,19 +27,19 @@ describe('inventoryReducer', () => {
   test('handles pending', () => {
     const state = inventoryReducer(
       initialInventoryState,
-      fetchInventories.pending('request-id', { itemCode: 'ITEM001', warehouseId: 1 }),
+      fetchInventories.pending('request-id', { itemCode: 'ITEM001', itemName: 'ボルト', warehouseId: 1 }),
     )
 
     expect(state.loading).toBe(true)
     expect(state.error).toBeNull()
-    expect(state.lastSearchCondition).toEqual({ itemCode: 'ITEM001', warehouseId: 1 })
+    expect(state.lastSearchCondition).toEqual({ itemCode: 'ITEM001', itemName: 'ボルト', warehouseId: 1 })
   })
 
   test('handles fulfilled', () => {
     const loadingState = { ...initialInventoryState, loading: true }
     const state = inventoryReducer(
       loadingState,
-      fetchInventories.fulfilled([item], 'request-id', { itemCode: 'ITEM001', warehouseId: 1 }),
+      fetchInventories.fulfilled([item], 'request-id', { itemCode: 'ITEM001', itemName: 'ボルト', warehouseId: 1 }),
     )
 
     expect(state.loading).toBe(false)
@@ -54,7 +54,7 @@ describe('inventoryReducer', () => {
       fetchInventories.rejected(
         new Error('network error'),
         'request-id',
-        { itemCode: 'ITEM001', warehouseId: 1 },
+        { itemCode: 'ITEM001', itemName: 'ボルト', warehouseId: 1 },
         'API error',
       ),
     )
@@ -77,7 +77,7 @@ describe('inventoryReducer', () => {
     const loadingState = { ...initialInventoryState, loading: true }
     const resultState = inventoryReducer(
       loadingState,
-      fetchInventories.fulfilled([item], 'request-id', { itemCode: 'ITEM001', warehouseId: 1 }),
+      fetchInventories.fulfilled([item], 'request-id', { itemCode: 'ITEM001', itemName: 'ボルト', warehouseId: 1 }),
     )
     const resetState = inventoryReducer(resultState, resetInventoryState())
     expect(resetState).toEqual(initialInventoryState)
@@ -90,7 +90,7 @@ describe('inventoryReducer', () => {
       fetchInventories.rejected(
         new Error('network error'),
         'request-id',
-        { itemCode: 'ITEM001', warehouseId: 1 },
+        { itemCode: 'ITEM001', itemName: 'ボルト', warehouseId: 1 },
         'API error',
       ),
     )

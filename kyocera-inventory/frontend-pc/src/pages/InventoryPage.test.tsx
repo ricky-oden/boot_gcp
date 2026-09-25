@@ -47,23 +47,25 @@ describe('InventoryPage', () => {
 
     expect(screen.getByRole('heading', { name: 'Inventory Search' })).toBeInTheDocument()
     expect(screen.getByLabelText('Item Code')).toBeInTheDocument()
+    expect(screen.getByLabelText('Item Name')).toBeInTheDocument()
     expect(screen.getByLabelText('Warehouse ID')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Search' })).toBeInTheDocument()
-    expect(screen.getByText('Item CodeやWarehouse IDを入力してSearchを押してください。')).toBeInTheDocument()
+    expect(screen.getByText('Searchを押してください。検索条件は任意です。')).toBeInTheDocument()
   })
 
-  test('submits itemCode and warehouseId and shows the result', async () => {
+  test('submits all conditions and shows the result', async () => {
     const user = userEvent.setup()
     mockedSearchInventories.mockResolvedValue([item])
     renderPage()
 
     await user.type(screen.getByLabelText('Item Code'), 'ITEM001')
+    await user.type(screen.getByLabelText('Item Name'), 'ボルト')
     await user.type(screen.getByLabelText('Warehouse ID'), '1')
     await user.click(screen.getByRole('button', { name: 'Search' }))
 
     expect(await screen.findByText('六角ボルト')).toBeInTheDocument()
     expect(screen.getByText('東京倉庫')).toBeInTheDocument()
-    expect(mockedSearchInventories).toHaveBeenCalledWith({ itemCode: 'ITEM001', warehouseId: 1 })
+    expect(mockedSearchInventories).toHaveBeenCalledWith({ itemCode: 'ITEM001', itemName: 'ボルト', warehouseId: 1 })
   })
 
     test('submits warehouseId and shows the result', async () => {
@@ -77,6 +79,19 @@ describe('InventoryPage', () => {
     expect(await screen.findByText('六角ボルト')).toBeInTheDocument()
     expect(screen.getByText('東京倉庫')).toBeInTheDocument()
     expect(mockedSearchInventories).toHaveBeenCalledWith({  warehouseId: 1 })
+  })
+
+  test('submit itemName and shows the result', async () => {
+    const user = userEvent.setup()
+    mockedSearchInventories.mockResolvedValue([item])
+    renderPage()
+
+    await user.type(screen.getByLabelText('Item Name'), 'ボルト')
+    await user.click(screen.getByRole('button', { name: 'Search' }))
+
+    expect(await screen.findByText('六角ボルト')).toBeInTheDocument()
+    expect(screen.getByText('東京倉庫')).toBeInTheDocument()
+    expect(mockedSearchInventories).toHaveBeenCalledWith({ itemName: 'ボルト' })
   })
 
   test('shows loading while the API request is pending', async () => {
@@ -101,6 +116,7 @@ describe('InventoryPage', () => {
     renderPage()
 
     await user.type(screen.getByLabelText('Item Code'), 'NOT_FOUND')
+    await user.type(screen.getByLabelText('Item Name'), 'NOT_FOUND')
     await user.type(screen.getByLabelText('Warehouse ID'), '999')
     await user.click(screen.getByRole('button', { name: 'Search' }))
 

@@ -8,5 +8,5 @@ import java.util.List;
 @Mapper
 public interface InventoryMapper {
 
-    List<InventorySearchRow> search(@Param("itemCode") String itemCode, @Param("warehouseId") Long warehouseId);
+    List<InventorySearchRow> search(@Param("itemCode") String itemCode, @Param("itemName") String itemName, @Param("warehouseId") Long warehouseId);
 }

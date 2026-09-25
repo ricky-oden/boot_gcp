@@ -10,7 +10,7 @@ export async function searchInventories(
   criteria: InventorySearchCriteria,
 ): Promise<InventoryItem[]> {
   const response = await inventoryHttpClient.get<InventoryItem[]>('/api/inventories', {
-    params: criteria ? { itemCode: criteria.itemCode, warehouseId: criteria.warehouseId } : undefined,
+    params: criteria ? { itemCode: criteria.itemCode, itemName: criteria.itemName, warehouseId: criteria.warehouseId } : undefined,
   })
   return response.data
 }
